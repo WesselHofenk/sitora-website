@@ -8,6 +8,34 @@ import Link from "next/link";
 
 const industries = ["Loodgieter", "Elektricien", "Schilder", "Dakdekker", "Aannemer / bouwbedrijf", "Installatiebedrijf", "Ander vakbedrijf"];
 
+type AdviceApiResult = {
+  ok?: boolean;
+  message?: string;
+  errors?: FieldErrors;
+};
+
+async function readAdviceApiResult(response: Response): Promise<AdviceApiResult> {
+  const body = await response.text();
+
+  if (body) {
+    try {
+      const result = JSON.parse(body) as unknown;
+      if (result && typeof result === "object") return result as AdviceApiResult;
+    } catch {
+      // A proxy or hosting platform can return plain text or HTML. Do not show
+      // that raw response in the page; the status-specific fallback below is safer.
+    }
+  }
+
+  if (response.status === 429) {
+    return { ok: false, message: "Je hebt kort geleden meerdere aanvragen verstuurd. Probeer het later opnieuw." };
+  }
+  if (response.status === 503) {
+    return { ok: false, message: "Het formulier is tijdelijk niet beschikbaar. Bel, WhatsApp of mail ons rechtstreeks." };
+  }
+  return { ok: response.ok, message: response.ok ? undefined : `Versturen is mislukt (status ${response.status}). Probeer het opnieuw.` };
+}
+
 function FieldError({ message }: { message?: string }) { return message ? <span className="flex items-center gap-1.5 text-xs font-bold text-red-700" role="alert"><AlertCircle className="size-3.5" />{message}</span> : null; }
 
 function useLeadForm(kind: FormKind) {
@@ -31,8 +59,12 @@ function useLeadForm(kind: FormKind) {
       sourcePage: window.location.pathname,
     };
     try {
-      const response = await fetch("/api/advies", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-      const result = await response.json();
+      const response = await fetch("/api/advies", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await readAdviceApiResult(response);
       if (!response.ok || !result.ok) { setErrors(result.errors || {}); setFormError(result.message || "Versturen lukt niet."); return; }
       setSubmitted(true); router.push("/bedankt");
     } catch { setFormError("Geen verbinding met de server. Controleer je internetverbinding en probeer opnieuw."); }

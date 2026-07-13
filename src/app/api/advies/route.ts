@@ -5,10 +5,19 @@ import { business } from "@/content/site";
 const attemptsByIp = new Map<string, number[]>();
 const RATE_LIMIT_WINDOW_MS = 10 * 60_000;
 const RATE_LIMIT_MAX_ATTEMPTS = 3;
+const LEAD_RECIPIENT = "info@sitora.nl";
 
 type EmailResult =
   | { ok: true; providerId?: string }
   | { ok: false; status: number };
+
+function getEmailAddress(value: string | undefined) {
+  const normalized = value?.trim();
+  if (!normalized) return undefined;
+
+  const address = normalized.match(/<([^<>]+)>$/)?.[1]?.trim() || normalized;
+  return /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(address) ? address.toLowerCase() : undefined;
+}
 
 function getClientIp(request: NextRequest) {
   return (
@@ -92,6 +101,48 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
+    const errors = validateLead(payload);
+    if (Object.keys(errors).length) {
+      return NextResponse.json(
+        { ok: false, message: "Controleer de gemarkeerde velden.", errors },
+        { status: 400 },
+      );
+    }
+
+    const apiKey = process.env.RESEND_API_KEY?.trim();
+    const from = process.env.LEAD_FROM_EMAIL?.trim();
+    const fromAddress = getEmailAddress(from);
+    const configuredRecipient = getEmailAddress(process.env.LEAD_TO_EMAIL);
+    const apiKeyIsValid = Boolean(apiKey?.startsWith("re_") && apiKey.length > 12);
+
+    // The public form must never be redirected to an address supplied through a
+    // stale or incorrectly configured environment variable. LEAD_TO_EMAIL is kept
+    // for backwards-compatible deployment configuration, but the real recipient
+    // is deliberately fixed here.
+    if (configuredRecipient && configuredRecipient !== LEAD_RECIPIENT) {
+      console.warn("[contact-form] Ignoring unexpected LEAD_TO_EMAIL", {
+        submissionId,
+        recipientIsExpected: false,
+      });
+    }
+
+    if (!apiKey || !apiKeyIsValid || !from || !fromAddress) {
+      console.error("[contact-form] Email configuration missing or invalid", {
+        submissionId,
+        hasValidApiKey: apiKeyIsValid,
+        hasFromAddress: Boolean(from),
+        fromAddressIsValid: Boolean(fromAddress),
+      });
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "EMAIL_NOT_CONFIGURED",
+          message: "Het formulier is tijdelijk niet beschikbaar. Bel, WhatsApp of mail ons rechtstreeks.",
+        },
+        { status: 503 },
+      );
+    }
+
     const retryAfterSeconds = rateLimit(getClientIp(request));
     if (retryAfterSeconds) {
       console.warn("[contact-form] Rate limit reached", { submissionId });
@@ -104,34 +155,6 @@ export async function POST(request: NextRequest) {
           status: 429,
           headers: { "Retry-After": String(retryAfterSeconds) },
         },
-      );
-    }
-
-    const errors = validateLead(payload);
-    if (Object.keys(errors).length) {
-      return NextResponse.json(
-        { ok: false, message: "Controleer de gemarkeerde velden.", errors },
-        { status: 400 },
-      );
-    }
-
-    const apiKey = process.env.RESEND_API_KEY?.trim();
-    const from = process.env.LEAD_FROM_EMAIL?.trim();
-    const configuredRecipient = (process.env.LEAD_TO_EMAIL?.trim() || business.email).toLowerCase();
-
-    if (!apiKey || !from || configuredRecipient !== business.email) {
-      console.error("[contact-form] Email configuration missing or invalid", {
-        submissionId,
-        hasApiKey: Boolean(apiKey),
-        hasFromAddress: Boolean(from),
-        recipientIsValid: configuredRecipient === business.email,
-      });
-      return NextResponse.json(
-        {
-          ok: false,
-          message: "Het formulier is tijdelijk niet beschikbaar. Bel, WhatsApp of mail ons rechtstreeks.",
-        },
-        { status: 503 },
       );
     }
 
@@ -153,7 +176,7 @@ export async function POST(request: NextRequest) {
       submissionId,
       body: {
         from,
-        to: [business.email],
+        to: [LEAD_RECIPIENT],
         reply_to: payload.email,
         subject: `Nieuwe aanvraag voor gratis websiteadvies — ${payload.company}`,
         text: [
@@ -196,7 +219,7 @@ export async function POST(request: NextRequest) {
       body: {
         from,
         to: [payload.email],
-        reply_to: business.email,
+        reply_to: LEAD_RECIPIENT,
         subject: "We hebben je aanvraag ontvangen — Sitora",
         text: `Hallo ${payload.name},\n\nBedankt voor je aanvraag voor gratis websiteadvies. We hebben je gegevens goed ontvangen en nemen persoonlijk contact met je op.\n\nAanvraagnummer: ${submissionId}\n\nKlantenservice 24/7 bereikbaar\n${business.phoneDisplay}\n${business.email}\n\nMet vriendelijke groet,\n${business.ownerName}\nSitora`,
       },
