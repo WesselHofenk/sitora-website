@@ -1,0 +1,17 @@
+import Image from "next/image";
+import Link from "next/link";
+
+export function Logo({ light = false }: { light?: boolean }) {
+  return (
+    <Link href="/" aria-label="Ga naar de homepage" className={light ? "inline-flex shrink-0 items-center overflow-hidden rounded-xl bg-white px-3 py-2 shadow-sm" : "inline-flex shrink-0 items-center py-1"}>
+      <Image
+        src={light ? "/images/sitora-logo.png" : "/images/sitora-logo-transparent.png"}
+        alt="Sitora.nl"
+        width={202}
+        height={66}
+        priority={!light}
+        className="h-10 w-auto sm:h-11"
+      />
+    </Link>
+  );
+}
