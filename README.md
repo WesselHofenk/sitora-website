@@ -44,20 +44,23 @@ De formulieren sturen JSON naar `src/app/api/advies/route.ts`. De route bevat:
 - honeypot;
 - maximaal drie pogingen per IP-adres per tien minuten;
 - foutstatussen zonder persoonsgegevens te loggen;
-- provider-acceptatie en aanvraagnummer in de serverlogs;
-- een verplichte Resend-koppeling zonder extra package.
+- SMTP-acceptatie en aanvraagnummer in de serverlogs;
+- server-side e-mailbezorging via Nodemailer en de beveiligde Vimexx-mailserver.
 
 Kopieer `.env.example` naar `.env.local` en configureer voor productie:
 
 ```env
-RESEND_API_KEY=
+SMTP_HOST=mail.sitora.nl
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_USER=info@sitora.nl
+SMTP_PASSWORD=
 LEAD_TO_EMAIL=info@sitora.nl
-LEAD_FROM_EMAIL="Sitora website <website@sitora.nl>"
 ```
 
-Het formulier accepteert pas een aanvraag wanneer Resend de e-mail aan `info@sitora.nl` heeft geaccepteerd. `RESEND_API_KEY` en `LEAD_FROM_EMAIL` zijn vereist. `LEAD_TO_EMAIL` is alleen behouden voor compatibiliteit met bestaande deployments: de API bezorgt aanvragen altijd aan het vaste adres `info@sitora.nl`, ook wanneer deze optionele variabele ontbreekt of afwijkt. Zonder een geldige API-key en afzender verschijnt bewust een duidelijke foutmelding; er wordt nooit een succesvol verzonden aanvraag gesimuleerd.
+`SMTP_USER` is zowel de geauthenticeerde mailbox als het afzenderadres. Iedere aanvraag gaat naar `LEAD_TO_EMAIL`; antwoorden gaan via `replyTo` rechtstreeks naar het e-mailadres dat de bezoeker heeft ingevuld. `SMTP_PASSWORD` is het wachtwoord van de mailbox en mag uitsluitend als geheime environment variable worden opgeslagen.
 
-Voeg de variabelen op het gekozen hostingplatform toe aan **Production**, **Preview** en desgewenst **Development**, en voer daarna een nieuwe deployment uit. Verifieer `sitora.nl` in Resend voordat je `website@sitora.nl` als afzender gebruikt. Publiceer daarvoor exact de SPF-, DKIM- en eventuele MX-records die Resend voor dit domein toont. Voeg nooit een tweede SPF-record op dezelfde hostnaam toe; combineer waarden wanneer de provider dat voorschrijft. Publiceer daarnaast een DMARC-record op `_dmarc.sitora.nl`, bijvoorbeeld eerst met beleid `p=none`, en controleer de rapporten voordat je dit aanscherpt.
+Voeg deze variabelen op het hostingplatform toe aan **Production**, **Preview** en desgewenst **Development**, en voer daarna een nieuwe deployment uit. Vimexx gebruikt voor deze mailbox `mail.sitora.nl` met een beveiligde SSL-verbinding op poort 465.
 
 ## Cookiekeuze en analytics
 

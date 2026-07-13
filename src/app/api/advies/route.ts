@@ -1,22 +1,51 @@
+import { createTransport } from "nodemailer";
 import { NextRequest, NextResponse } from "next/server";
-import { normalizeLead, validateLead } from "@/lib/lead-validation";
 import { business } from "@/content/site";
+import { normalizeLead, validateLead } from "@/lib/lead-validation";
 
 const attemptsByIp = new Map<string, number[]>();
 const RATE_LIMIT_WINDOW_MS = 10 * 60_000;
 const RATE_LIMIT_MAX_ATTEMPTS = 3;
-const LEAD_RECIPIENT = "info@sitora.nl";
 
-type EmailResult =
-  | { ok: true; providerId?: string }
-  | { ok: false; status: number };
+type SmtpConfiguration = {
+  host: string;
+  port: number;
+  secure: boolean;
+  user: string;
+  password: string;
+  recipient: string;
+};
 
 function getEmailAddress(value: string | undefined) {
-  const normalized = value?.trim();
+  const normalized = value?.trim().toLowerCase();
   if (!normalized) return undefined;
+  return /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(normalized) ? normalized : undefined;
+}
 
-  const address = normalized.match(/<([^<>]+)>$/)?.[1]?.trim() || normalized;
-  return /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(address) ? address.toLowerCase() : undefined;
+function getSmtpConfiguration(): SmtpConfiguration | undefined {
+  const host = process.env.SMTP_HOST?.trim();
+  const port = Number(process.env.SMTP_PORT?.trim());
+  const secureValue = process.env.SMTP_SECURE?.trim().toLowerCase();
+  const secure = secureValue === "true" ? true : secureValue === "false" ? false : undefined;
+  const user = getEmailAddress(process.env.SMTP_USER);
+  const password = process.env.SMTP_PASSWORD;
+  const recipient = getEmailAddress(process.env.LEAD_TO_EMAIL);
+
+  if (
+    !host ||
+    /\s/.test(host) ||
+    !Number.isInteger(port) ||
+    port < 1 ||
+    port > 65_535 ||
+    secure === undefined ||
+    !user ||
+    !password ||
+    !recipient
+  ) {
+    return undefined;
+  }
+
+  return { host, port, secure, user, password, recipient };
 }
 
 function getClientIp(request: NextRequest) {
@@ -48,57 +77,38 @@ function rateLimit(ip: string) {
   return 0;
 }
 
-async function sendWithResend({
-  apiKey,
-  body,
-  event,
-  submissionId,
-}: {
-  apiKey: string;
-  body: Record<string, unknown>;
-  event: "lead" | "confirmation";
-  submissionId: string;
-}): Promise<EmailResult> {
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
+function smtpErrorResponse() {
+  return NextResponse.json(
+    {
+      ok: false,
+      message: "Versturen lukt nu niet. Probeer het later opnieuw of neem rechtstreeks contact op.",
     },
-    body: JSON.stringify(body),
-  });
-  const result = (await response.json().catch(() => ({}))) as { id?: unknown };
-  const providerId = typeof result.id === "string" ? result.id : undefined;
-  const providerRequestId = response.headers.get("x-request-id") || undefined;
-
-  if (!response.ok) {
-    console.error("[contact-form] Provider rejected email", {
-      event,
-      submissionId,
-      providerStatus: response.status,
-      providerRequestId,
-    });
-    return { ok: false, status: response.status };
-  }
-
-  console.info("[contact-form] Provider accepted email", {
-    event,
-    submissionId,
-    providerId,
-    providerStatus: response.status,
-  });
-  return { ok: true, providerId };
+    { status: 500 },
+  );
 }
 
 export async function POST(request: NextRequest) {
   const submissionId = crypto.randomUUID();
+  let requestBody: unknown;
 
   try {
-    const payload = normalizeLead(await request.json());
+    requestBody = await request.json();
+  } catch {
+    return NextResponse.json(
+      { ok: false, message: "De aanvraag bevat geen geldige gegevens." },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const payload = normalizeLead(requestBody);
 
     // Bots that fill this visually hidden field get a silent success response.
     if (payload.website_url) {
-      return NextResponse.json({ ok: true });
+      return NextResponse.json(
+        { ok: true, message: "Bedankt! Je aanvraag is succesvol verzonden." },
+        { status: 200 },
+      );
     }
 
     const errors = validateLead(payload);
@@ -109,38 +119,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const apiKey = process.env.RESEND_API_KEY?.trim();
-    const from = process.env.LEAD_FROM_EMAIL?.trim();
-    const fromAddress = getEmailAddress(from);
-    const configuredRecipient = getEmailAddress(process.env.LEAD_TO_EMAIL);
-    const apiKeyIsValid = Boolean(apiKey?.startsWith("re_") && apiKey.length > 12);
-
-    // The public form must never be redirected to an address supplied through a
-    // stale or incorrectly configured environment variable. LEAD_TO_EMAIL is kept
-    // for backwards-compatible deployment configuration, but the real recipient
-    // is deliberately fixed here.
-    if (configuredRecipient && configuredRecipient !== LEAD_RECIPIENT) {
-      console.warn("[contact-form] Ignoring unexpected LEAD_TO_EMAIL", {
-        submissionId,
-        recipientIsExpected: false,
-      });
-    }
-
-    if (!apiKey || !apiKeyIsValid || !from || !fromAddress) {
-      console.error("[contact-form] Email configuration missing or invalid", {
-        submissionId,
-        hasValidApiKey: apiKeyIsValid,
-        hasFromAddress: Boolean(from),
-        fromAddressIsValid: Boolean(fromAddress),
-      });
-      return NextResponse.json(
-        {
-          ok: false,
-          code: "EMAIL_NOT_CONFIGURED",
-          message: "Het formulier is tijdelijk niet beschikbaar. Bel, WhatsApp of mail ons rechtstreeks.",
-        },
-        { status: 503 },
-      );
+    const smtp = getSmtpConfiguration();
+    if (!smtp) {
+      console.error("[contact-form] SMTP configuration missing or invalid", { submissionId });
+      return smtpErrorResponse();
     }
 
     const retryAfterSeconds = rateLimit(getClientIp(request));
@@ -158,10 +140,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.info("[contact-form] Valid submission received", {
-      submissionId,
-      kind: payload.kind,
-      sourcePage: payload.sourcePage || "unknown",
+    const transporter = createTransport({
+      host: smtp.host,
+      port: smtp.port,
+      secure: smtp.secure,
+      auth: {
+        user: smtp.user,
+        pass: smtp.password,
+      },
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 20_000,
     });
 
     const submittedAt = new Intl.DateTimeFormat("nl-NL", {
@@ -170,14 +159,11 @@ export async function POST(request: NextRequest) {
       timeZone: "Europe/Amsterdam",
     }).format(new Date());
 
-    const leadEmail = await sendWithResend({
-      apiKey,
-      event: "lead",
-      submissionId,
-      body: {
-        from,
-        to: [LEAD_RECIPIENT],
-        reply_to: payload.email,
+    try {
+      const leadEmail = await transporter.sendMail({
+        from: { name: "Sitora website", address: smtp.user },
+        to: smtp.recipient,
+        replyTo: payload.email,
         subject: `Nieuwe aanvraag voor gratis websiteadvies — ${payload.company}`,
         text: [
           `Ingediend: ${submittedAt}`,
@@ -199,48 +185,48 @@ export async function POST(request: NextRequest) {
           `Startperiode: ${payload.startPeriod || "-"}`,
           `Bericht: ${payload.message}`,
         ].join("\n"),
-      },
-    });
+      });
 
-    if (!leadEmail.ok) {
-      return NextResponse.json(
-        {
-          ok: false,
-          message: "Versturen lukt nu niet. Probeer het later opnieuw of neem rechtstreeks contact op.",
-        },
-        { status: 502 },
-      );
+      console.info("[contact-form] Lead email accepted by SMTP server", {
+        submissionId,
+        messageId: leadEmail.messageId,
+      });
+    } catch (error) {
+      console.error("[contact-form] SMTP delivery failed", {
+        submissionId,
+        errorName: error instanceof Error ? error.name : "UnknownError",
+      });
+      return smtpErrorResponse();
     }
 
-    const confirmationEmail = await sendWithResend({
-      apiKey,
-      event: "confirmation",
-      submissionId,
-      body: {
-        from,
-        to: [payload.email],
-        reply_to: LEAD_RECIPIENT,
+    try {
+      await transporter.sendMail({
+        from: { name: "Sitora website", address: smtp.user },
+        to: payload.email,
+        replyTo: smtp.recipient,
         subject: "We hebben je aanvraag ontvangen — Sitora",
         text: `Hallo ${payload.name},\n\nBedankt voor je aanvraag voor gratis websiteadvies. We hebben je gegevens goed ontvangen en nemen persoonlijk contact met je op.\n\nAanvraagnummer: ${submissionId}\n\nKlantenservice 24/7 bereikbaar\n${business.phoneDisplay}\n${business.email}\n\nMet vriendelijke groet,\n${business.ownerName}\nSitora`,
-      },
-    });
-
-    if (!confirmationEmail.ok) {
-      console.warn("[contact-form] Lead delivered, but confirmation failed", {
+      });
+    } catch (error) {
+      console.warn("[contact-form] Lead delivered, but confirmation email failed", {
         submissionId,
-        providerStatus: confirmationEmail.status,
+        errorName: error instanceof Error ? error.name : "UnknownError",
       });
     }
 
-    return NextResponse.json({ ok: true, submissionId });
+    return NextResponse.json(
+      {
+        ok: true,
+        message: "Bedankt! Je aanvraag is succesvol verzonden.",
+        submissionId,
+      },
+      { status: 200 },
+    );
   } catch (error) {
     console.error("[contact-form] Unexpected server error", {
       submissionId,
       errorName: error instanceof Error ? error.name : "UnknownError",
     });
-    return NextResponse.json(
-      { ok: false, message: "Er ging iets mis. Controleer je verbinding en probeer opnieuw." },
-      { status: 500 },
-    );
+    return smtpErrorResponse();
   }
 }

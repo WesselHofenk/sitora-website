@@ -30,8 +30,8 @@ async function readAdviceApiResult(response: Response): Promise<AdviceApiResult>
   if (response.status === 429) {
     return { ok: false, message: "Je hebt kort geleden meerdere aanvragen verstuurd. Probeer het later opnieuw." };
   }
-  if (response.status === 503) {
-    return { ok: false, message: "Het formulier is tijdelijk niet beschikbaar. Bel, WhatsApp of mail ons rechtstreeks." };
+  if (response.status === 500) {
+    return { ok: false, message: "Versturen lukt nu niet. Probeer het later opnieuw of neem rechtstreeks contact op." };
   }
   return { ok: response.ok, message: response.ok ? undefined : `Versturen is mislukt (status ${response.status}). Probeer het opnieuw.` };
 }
