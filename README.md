@@ -44,10 +44,10 @@ De formulieren sturen JSON naar `src/app/api/advies/route.ts`. De route bevat:
 - honeypot;
 - maximaal drie pogingen per IP-adres per tien minuten;
 - foutstatussen zonder persoonsgegevens te loggen;
-- een timeout en expliciete HTTP-statusafhandeling;
-- server-to-server bezorging via FormSubmit aan `info@sitora.nl`.
+- expliciete HTTP-statusafhandeling;
+- bezorging via de cross-origin AJAX-endpoint van FormSubmit aan `info@sitora.nl`.
 
-De browser roept alleen de same-origin route `/api/advies` aan. Daardoor is er geen externe CORS-configuratie in de frontend nodig. De serverroute verstuurt de gevalideerde gegevens als JSON naar de AJAX-endpoint van FormSubmit.
+De browser laat de aanvraag eerst controleren door de same-origin route `/api/advies`. Pas na geldige servervalidatie stuurt de browser de genormaliseerde velden als JSON naar FormSubmit. De AJAX-endpoint ondersteunt cross-origin verzoeken; succes wordt alleen getoond wanneer zowel de eigen API-route als FormSubmit de aanvraag accepteert. Deze opzet voorkomt de HTTP 403 die FormSubmit geeft aan rechtstreekse verzoeken vanuit Vercel-serverless IP-adressen.
 
 Er zijn geen API-keys of server-side environment variables nodig voor formulierbezorging. Na de eerste geldige inzending stuurt FormSubmit een eenmalige activatiemail naar `info@sitora.nl`. Klik op de bevestigingslink om bezorging te activeren. Niet-bevestigde inzendingen worden volgens FormSubmit maximaal 30 dagen bewaard.
 

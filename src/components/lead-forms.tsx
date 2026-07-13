@@ -12,6 +12,15 @@ type AdviceApiResult = {
   ok?: boolean;
   message?: string;
   errors?: FieldErrors;
+  submission?: {
+    endpoint?: string;
+    fields?: Record<string, string>;
+  };
+};
+
+type FormSubmitResult = {
+  success?: boolean | "true" | "false";
+  message?: string;
 };
 
 async function readAdviceApiResult(response: Response): Promise<AdviceApiResult> {
@@ -35,6 +44,55 @@ async function readAdviceApiResult(response: Response): Promise<AdviceApiResult>
 }
 
 function FieldError({ message }: { message?: string }) { return message ? <span className="flex items-center gap-1.5 text-xs font-bold text-red-700" role="alert"><AlertCircle className="size-3.5" />{message}</span> : null; }
+
+async function deliverToFormSubmit(submission: AdviceApiResult["submission"]) {
+  if (!submission?.endpoint || !submission.fields) {
+    console.error("[contact-form] API response did not include a provider submission");
+    return false;
+  }
+
+  try {
+    const response = await fetch(submission.endpoint, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(submission.fields),
+    });
+    const rawBody = await response.text();
+    let result: FormSubmitResult = {};
+
+    if (rawBody) {
+      try {
+        result = JSON.parse(rawBody) as FormSubmitResult;
+      } catch (error) {
+        console.error("[contact-form] FormSubmit returned non-JSON", {
+          providerStatus: response.status,
+          error,
+        });
+      }
+    }
+
+    const activationPending = response.ok && /needs activation/i.test(result.message || "");
+    const accepted = result.success === true || result.success === "true" || activationPending;
+    if (!response.ok || !accepted) {
+      console.error("[contact-form] FormSubmit rejected submission", {
+        providerStatus: response.status,
+        providerMessage: result.message,
+      });
+      return false;
+    }
+
+    if (activationPending) {
+      console.warn("[contact-form] Submission accepted pending mailbox activation");
+    }
+    return true;
+  } catch (error) {
+    console.error("[contact-form] FormSubmit request failed", error);
+    return false;
+  }
+}
 
 function useLeadForm(kind: FormKind) {
   const [loading, setLoading] = useState(false);
@@ -73,8 +131,12 @@ function useLeadForm(kind: FormKind) {
       });
       const result = await readAdviceApiResult(response);
       if (!response.ok || !result.ok) { setErrors(result.errors || {}); setFormError(result.message || "Versturen lukt niet."); return; }
+      if (result.submission && !(await deliverToFormSubmit(result.submission))) {
+        setFormError("Je aanvraag is niet verzonden. Probeer het opnieuw of mail info@sitora.nl.");
+        return;
+      }
       setSubmitted(true);
-      setFormSuccess(result.message || "Bedankt! Je aanvraag is succesvol naar Sitora verzonden.");
+      setFormSuccess("Bedankt! Je aanvraag is succesvol naar Sitora verzonden.");
       formElement.reset();
     } catch (error) {
       console.error("[contact-form] Request failed", error);
