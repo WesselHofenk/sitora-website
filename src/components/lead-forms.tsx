@@ -1,9 +1,9 @@
 "use client";
 
 import { AlertCircle, Check, LoaderCircle, Send } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
-import type { FieldErrors, FormKind, LeadPayload } from "@/lib/lead-validation";
+import { validateLead, type FieldErrors, type FormKind, type LeadPayload } from "@/lib/lead-validation";
 import Link from "next/link";
 
 const industries = ["Loodgieter", "Elektricien", "Schilder", "Dakdekker", "Aannemer / bouwbedrijf", "Installatiebedrijf", "Ander vakbedrijf"];
@@ -21,7 +21,8 @@ async function readAdviceApiResult(response: Response): Promise<AdviceApiResult>
     try {
       const result = JSON.parse(body) as unknown;
       if (result && typeof result === "object") return result as AdviceApiResult;
-    } catch {
+    } catch (error) {
+      console.error("[contact-form] API returned non-JSON", { status: response.status, error });
       // A proxy or hosting platform can return plain text or HTML. Do not show
       // that raw response in the page; the status-specific fallback below is safer.
     }
@@ -30,26 +31,24 @@ async function readAdviceApiResult(response: Response): Promise<AdviceApiResult>
   if (response.status === 429) {
     return { ok: false, message: "Je hebt kort geleden meerdere aanvragen verstuurd. Probeer het later opnieuw." };
   }
-  if (response.status === 500) {
-    return { ok: false, message: "Versturen lukt nu niet. Probeer het later opnieuw of neem rechtstreeks contact op." };
-  }
-  return { ok: response.ok, message: response.ok ? undefined : `Versturen is mislukt (status ${response.status}). Probeer het opnieuw.` };
+  return { ok: response.ok, message: response.ok ? undefined : "Je aanvraag is niet verzonden. Probeer het opnieuw of mail info@sitora.nl." };
 }
 
 function FieldError({ message }: { message?: string }) { return message ? <span className="flex items-center gap-1.5 text-xs font-bold text-red-700" role="alert"><AlertCircle className="size-3.5" />{message}</span> : null; }
 
 function useLeadForm(kind: FormKind) {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState("");
+  const [formSuccess, setFormSuccess] = useState("");
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (loading || submitted) return;
-    setLoading(true); setErrors({}); setFormError("");
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    setErrors({}); setFormError(""); setFormSuccess("");
+    const form = new FormData(formElement);
     const payload: LeadPayload = {
       kind,
       name: String(form.get("name") || ""), company: String(form.get("company") || ""), email: String(form.get("email") || ""), phone: String(form.get("phone") || ""),
@@ -58,6 +57,14 @@ function useLeadForm(kind: FormKind) {
       startPeriod: String(form.get("startPeriod") || ""), message: String(form.get("message") || ""), privacy: form.get("privacy") === "on", website_url: String(form.get("website_url") || ""),
       sourcePage: window.location.pathname,
     };
+    const clientErrors = validateLead(payload);
+    if (Object.keys(clientErrors).length) {
+      setErrors(clientErrors);
+      setFormError("Controleer de gemarkeerde velden.");
+      return;
+    }
+
+    setLoading(true);
     try {
       const response = await fetch("/api/advies", {
         method: "POST",
@@ -66,18 +73,23 @@ function useLeadForm(kind: FormKind) {
       });
       const result = await readAdviceApiResult(response);
       if (!response.ok || !result.ok) { setErrors(result.errors || {}); setFormError(result.message || "Versturen lukt niet."); return; }
-      setSubmitted(true); router.push("/bedankt");
-    } catch { setFormError("Geen verbinding met de server. Controleer je internetverbinding en probeer opnieuw."); }
+      setSubmitted(true);
+      setFormSuccess(result.message || "Bedankt! Je aanvraag is succesvol naar Sitora verzonden.");
+      formElement.reset();
+    } catch (error) {
+      console.error("[contact-form] Request failed", error);
+      setFormError("Geen verbinding met de server. Controleer je internetverbinding en probeer opnieuw.");
+    }
     finally { setLoading(false); }
   }
-  return { submit, loading, submitted, errors, formError };
+  return { submit, loading, submitted, errors, formError, formSuccess };
 }
 
 const inputClass = "h-12 w-full rounded-lg border border-slate-900/20 bg-white px-4 text-base text-slate-950 outline-none transition-[border-color,box-shadow] duration-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10";
 const textareaClass = `${inputClass} h-auto min-h-28 py-3`;
 
 export function CompactAdviceForm() {
-  const { submit, loading, submitted, errors, formError } = useLeadForm("compact");
+  const { submit, loading, submitted, errors, formError, formSuccess } = useLeadForm("compact");
   return (
     <form onSubmit={submit} noValidate className="rounded-[1.25rem] border border-white/10 bg-[#f6f3ed] p-6 text-slate-950 sm:p-9" aria-describedby={formError ? "compact-form-error" : undefined}>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -92,15 +104,16 @@ export function CompactAdviceForm() {
       <label className="mt-5 flex items-start gap-3 text-sm leading-6 text-slate-700"><input className="mt-1 size-4 shrink-0 accent-orange-500" type="checkbox" name="privacy" required aria-invalid={!!errors.privacy} /><span>Ik geef Sitora toestemming om contact op te nemen over deze aanvraag. Lees de <Link href="/privacyverklaring" className="font-bold underline">privacyverklaring</Link>. *</span></label><FieldError message={errors.privacy} />
       <div className="absolute -left-[10000px]" aria-hidden="true"><label>Website URL<input name="website_url" tabIndex={-1} autoComplete="off" /></label></div>
       {formError ? <p id="compact-form-error" role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-bold text-red-800">{formError}</p> : null}
+      {formSuccess ? <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm font-bold text-emerald-800"><Check className="mr-2 inline size-4" />{formSuccess}</p> : null}
       <button disabled={loading || submitted} type="submit" className="mt-6 inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-full bg-orange-500 px-5 py-3 font-black text-white transition-[background-color,transform] duration-150 hover:bg-orange-600 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60">{loading ? <><LoaderCircle className="size-4 animate-spin" />Bezig met versturen…</> : submitted ? <><Check className="size-4" />Ontvangen</> : <>Ontvang gratis websiteadvies <Send className="size-4" /></>}</button>
-      <p className="mt-4 text-xs leading-5 text-slate-500">Vrijblijvend. Na succesvolle verzending ontvang je een bevestiging per e-mail.</p>
+      <p className="mt-4 text-xs leading-5 text-slate-500">Vrijblijvend. Na succesvolle verzending nemen we persoonlijk contact met je op.</p>
     </form>
   );
 }
 
 export function DetailedAdviceForm() {
   const searchParams = useSearchParams();
-  const { submit, loading, submitted, errors, formError } = useLeadForm("detailed");
+  const { submit, loading, submitted, errors, formError, formSuccess } = useLeadForm("detailed");
   const packageDefault = searchParams.get("pakket") || "unknown";
   const features = ["Aparte dienstenpagina's", "Projectportfolio", "Meerdere werkgebieden", "Vacaturepagina", "Reviews-koppeling", "Analytics en conversiemeting"];
   return (
@@ -124,8 +137,9 @@ export function DetailedAdviceForm() {
       <label className="mt-6 flex items-start gap-3 text-sm leading-6"><input className="mt-1 size-4 shrink-0 accent-orange-500" type="checkbox" name="privacy" required aria-invalid={!!errors.privacy} /><span>Ik geef Sitora toestemming om mijn gegevens te gebruiken om contact op te nemen over deze aanvraag. Lees de <Link href="/privacyverklaring" className="font-bold underline">privacyverklaring</Link>. *</span></label><FieldError message={errors.privacy} />
       <div className="absolute -left-[10000px]" aria-hidden="true"><label>Website URL<input name="website_url" tabIndex={-1} autoComplete="off" /></label></div>
       {formError ? <p id="detailed-form-error" role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-sm font-bold text-red-800">{formError}</p> : null}
+      {formSuccess ? <p role="status" className="mt-5 rounded-xl bg-emerald-50 p-4 text-sm font-bold text-emerald-800"><Check className="mr-2 inline size-4" />{formSuccess}</p> : null}
       <button disabled={loading || submitted} type="submit" className="mt-6 inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-full bg-orange-500 px-5 py-3 font-black text-white transition-[background-color,transform] duration-150 hover:bg-orange-600 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60">{loading ? <><LoaderCircle className="size-4 animate-spin" />Aanvraag versturen…</> : submitted ? <><Check className="size-4" />Aanvraag ontvangen</> : <>Ontvang gratis websiteadvies <Send className="size-4" /></>}</button>
-      <p className="mt-4 text-center text-xs text-slate-500">Versturen is vrijblijvend. Na succesvolle verzending ontvang je een bevestiging per e-mail.</p>
+      <p className="mt-4 text-center text-xs text-slate-500">Versturen is vrijblijvend. Na succesvolle verzending nemen we persoonlijk contact met je op.</p>
     </form>
   );
 }

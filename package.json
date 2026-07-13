@@ -12,14 +12,12 @@
   "dependencies": {
     "lucide-react": "1.24.0",
     "next": "16.2.10",
-    "nodemailer": "^9.0.3",
     "react": "19.2.7",
     "react-dom": "19.2.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.3.2",
     "@types/node": "^24.0.0",
-    "@types/nodemailer": "^8.0.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "eslint": "9.39.1",

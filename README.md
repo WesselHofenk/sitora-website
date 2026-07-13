@@ -40,27 +40,18 @@ De publieke bedrijfsgegevens staan centraal in `src/content/site.ts`. Vervang `p
 
 De formulieren sturen JSON naar `src/app/api/advies/route.ts`. De route bevat:
 
-- servervalidatie;
+- client- en servervalidatie;
 - honeypot;
 - maximaal drie pogingen per IP-adres per tien minuten;
 - foutstatussen zonder persoonsgegevens te loggen;
-- SMTP-acceptatie en aanvraagnummer in de serverlogs;
-- server-side e-mailbezorging via Nodemailer en de beveiligde Vimexx-mailserver.
+- een timeout en expliciete HTTP-statusafhandeling;
+- server-to-server bezorging via FormSubmit aan `info@sitora.nl`.
 
-Kopieer `.env.example` naar `.env.local` en configureer voor productie:
+De browser roept alleen de same-origin route `/api/advies` aan. Daardoor is er geen externe CORS-configuratie in de frontend nodig. De serverroute verstuurt de gevalideerde gegevens als JSON naar de AJAX-endpoint van FormSubmit.
 
-```env
-SMTP_HOST=mail.sitora.nl
-SMTP_PORT=465
-SMTP_SECURE=true
-SMTP_USER=info@sitora.nl
-SMTP_PASSWORD=
-LEAD_TO_EMAIL=info@sitora.nl
-```
+Er zijn geen API-keys of server-side environment variables nodig voor formulierbezorging. Na de eerste geldige inzending stuurt FormSubmit een eenmalige activatiemail naar `info@sitora.nl`. Klik op de bevestigingslink om bezorging te activeren. Niet-bevestigde inzendingen worden volgens FormSubmit maximaal 30 dagen bewaard.
 
-`SMTP_USER` is zowel de geauthenticeerde mailbox als het afzenderadres. Iedere aanvraag gaat naar `LEAD_TO_EMAIL`; antwoorden gaan via `replyTo` rechtstreeks naar het e-mailadres dat de bezoeker heeft ingevuld. `SMTP_PASSWORD` is het wachtwoord van de mailbox en mag uitsluitend als geheime environment variable worden opgeslagen.
-
-Voeg deze variabelen op het hostingplatform toe aan **Production**, **Preview** en desgewenst **Development**, en voer daarna een nieuwe deployment uit. Vimexx gebruikt voor deze mailbox `mail.sitora.nl` met een beveiligde SSL-verbinding op poort 465.
+De aanvraag bevat minimaal Naam, Bedrijfsnaam, E-mailadres, Telefoonnummer, Branche, Huidige website en Bericht. Het uitgebreide formulier stuurt daarnaast land, werkgebied, project, pakket, doel, functies en startperiode mee. `Reply-To` wordt ingesteld op het ingevulde e-mailadres.
 
 ## Cookiekeuze en analytics
 
@@ -111,11 +102,12 @@ De route `/api/advies` is servercode en werkt niet wanneer alleen statische HTML
 
 1. Plaats het project in een Git-repository en importeer het in het hostingplatform.
 2. Gebruik `pnpm build` als buildcommand en `pnpm start` als startcommand wanneer de host dit vraagt.
-3. Voeg de drie benodigde server-side environment variables toe.
+3. Voor formulierbezorging zijn geen environment variables nodig.
 4. Koppel `sitora.nl` en laat `www.sitora.nl` doorsturen naar de apexvariant.
 5. Voer een nieuwe deployment uit.
-6. Test met een echte inzending. Een POST naar `https://sitora.nl/api/advies` moet JSON teruggeven; een Apache-404 betekent dat de serverroute nog niet is gedeployed.
-7. Zoek in de serverlogs op `[contact-form] Provider accepted email` en controleer het `providerId` en `submissionId`.
+6. Dien het formulier één keer in en bevestig de activatiemail van FormSubmit in `info@sitora.nl`.
+7. Test daarna met een tweede echte inzending. Een POST naar `https://sitora.nl/api/advies` moet JSON met `ok: true` teruggeven.
+8. Zoek bij problemen in de Vercel-logs op `[contact-form]`; technische providerfouten worden alleen daar gelogd.
 
 ## Vóór publicatie
 

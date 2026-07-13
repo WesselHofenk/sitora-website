@@ -1,52 +1,19 @@
-import { createTransport } from "nodemailer";
 import { NextRequest, NextResponse } from "next/server";
-import { business } from "@/content/site";
-import { normalizeLead, validateLead } from "@/lib/lead-validation";
+import { normalizeLead, validateLead, type LeadPayload } from "@/lib/lead-validation";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+const FORM_SUBMIT_ENDPOINT = "https://formsubmit.co/ajax/info@sitora.nl";
 const attemptsByIp = new Map<string, number[]>();
 const RATE_LIMIT_WINDOW_MS = 10 * 60_000;
 const RATE_LIMIT_MAX_ATTEMPTS = 3;
+const PROVIDER_TIMEOUT_MS = 15_000;
 
-type SmtpConfiguration = {
-  host: string;
-  port: number;
-  secure: boolean;
-  user: string;
-  password: string;
-  recipient: string;
+type FormSubmitResult = {
+  success?: boolean | "true" | "false";
+  message?: string;
 };
-
-function getEmailAddress(value: string | undefined) {
-  const normalized = value?.trim().toLowerCase();
-  if (!normalized) return undefined;
-  return /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(normalized) ? normalized : undefined;
-}
-
-function getSmtpConfiguration(): SmtpConfiguration | undefined {
-  const host = process.env.SMTP_HOST?.trim();
-  const port = Number(process.env.SMTP_PORT?.trim());
-  const secureValue = process.env.SMTP_SECURE?.trim().toLowerCase();
-  const secure = secureValue === "true" ? true : secureValue === "false" ? false : undefined;
-  const user = getEmailAddress(process.env.SMTP_USER);
-  const password = process.env.SMTP_PASSWORD;
-  const recipient = getEmailAddress(process.env.LEAD_TO_EMAIL);
-
-  if (
-    !host ||
-    /\s/.test(host) ||
-    !Number.isInteger(port) ||
-    port < 1 ||
-    port > 65_535 ||
-    secure === undefined ||
-    !user ||
-    !password ||
-    !recipient
-  ) {
-    return undefined;
-  }
-
-  return { host, port, secure, user, password, recipient };
-}
 
 function getClientIp(request: NextRequest) {
   return (
@@ -77,14 +44,123 @@ function rateLimit(ip: string) {
   return 0;
 }
 
-function smtpErrorResponse() {
+function providerErrorResponse() {
   return NextResponse.json(
     {
       ok: false,
-      message: "Versturen lukt nu niet. Probeer het later opnieuw of neem rechtstreeks contact op.",
+      message: "Je aanvraag is niet verzonden. Probeer het opnieuw of mail info@sitora.nl.",
     },
-    { status: 500 },
+    { status: 502 },
   );
+}
+
+function formSourceUrl(sourcePage: string | undefined) {
+  const safePath = sourcePage?.startsWith("/") && !sourcePage.startsWith("//")
+    ? sourcePage
+    : "/contact";
+  return new URL(safePath, "https://sitora.nl").toString();
+}
+
+function formSubmitFields(payload: LeadPayload, submissionId: string) {
+  const submittedAt = new Intl.DateTimeFormat("nl-NL", {
+    dateStyle: "full",
+    timeStyle: "long",
+    timeZone: "Europe/Amsterdam",
+  }).format(new Date());
+
+  return {
+    _subject: `Nieuwe aanvraag voor gratis websiteadvies — ${payload.company}`,
+    _template: "table",
+    _captcha: "false",
+    _replyto: payload.email,
+    _url: formSourceUrl(payload.sourcePage),
+    Naam: payload.name,
+    Bedrijfsnaam: payload.company,
+    "E-mailadres": payload.email,
+    Telefoonnummer: payload.phone,
+    Branche: payload.industry,
+    "Huidige website": payload.currentWebsite || "Niet ingevuld",
+    Bericht: payload.message,
+    Land: payload.country || "-",
+    "Plaats of werkgebied": payload.city || "-",
+    Project: payload.projectType || "-",
+    Pakket: payload.package || "-",
+    "Belangrijkste bedrijfsdoel": payload.goal || "-",
+    "Gewenste functies": payload.features?.join(", ") || "-",
+    Startperiode: payload.startPeriod || "-",
+    Formulier: payload.kind,
+    Bronpagina: payload.sourcePage || "/contact",
+    Ingediend: submittedAt,
+    Aanvraagnummer: submissionId,
+  };
+}
+
+async function deliverLead(payload: LeadPayload, submissionId: string) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
+  const sourceUrl = formSourceUrl(payload.sourcePage);
+
+  try {
+    const response = await fetch(FORM_SUBMIT_ENDPOINT, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Origin: "https://sitora.nl",
+        Referer: sourceUrl,
+      },
+      body: JSON.stringify(formSubmitFields(payload, submissionId)),
+      cache: "no-store",
+      signal: controller.signal,
+    });
+
+    const rawBody = await response.text();
+    let result: FormSubmitResult = {};
+
+    if (rawBody) {
+      try {
+        result = JSON.parse(rawBody) as FormSubmitResult;
+      } catch {
+        console.error("[contact-form] FormSubmit returned non-JSON", {
+          submissionId,
+          providerStatus: response.status,
+        });
+      }
+    }
+
+    const activationPending = response.ok && /needs activation/i.test(result.message || "");
+    const accepted = result.success === true || result.success === "true" || activationPending;
+    if (!response.ok || !accepted) {
+      console.error("[contact-form] FormSubmit rejected submission", {
+        submissionId,
+        providerStatus: response.status,
+        providerMessage: result.message,
+      });
+      return false;
+    }
+
+    if (activationPending) {
+      console.warn("[contact-form] FormSubmit accepted submission pending mailbox activation", {
+        submissionId,
+        providerStatus: response.status,
+      });
+      return true;
+    }
+
+    console.info("[contact-form] FormSubmit accepted submission", {
+      submissionId,
+      providerStatus: response.status,
+    });
+    return true;
+  } catch (error) {
+    console.error("[contact-form] FormSubmit request failed", {
+      submissionId,
+      errorName: error instanceof Error ? error.name : "UnknownError",
+    });
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -106,7 +182,7 @@ export async function POST(request: NextRequest) {
     // Bots that fill this visually hidden field get a silent success response.
     if (payload.website_url) {
       return NextResponse.json(
-        { ok: true, message: "Bedankt! Je aanvraag is succesvol verzonden." },
+        { ok: true, message: "Bedankt! Je aanvraag is ontvangen." },
         { status: 200 },
       );
     }
@@ -117,12 +193,6 @@ export async function POST(request: NextRequest) {
         { ok: false, message: "Controleer de gemarkeerde velden.", errors },
         { status: 400 },
       );
-    }
-
-    const smtp = getSmtpConfiguration();
-    if (!smtp) {
-      console.error("[contact-form] SMTP configuration missing or invalid", { submissionId });
-      return smtpErrorResponse();
     }
 
     const retryAfterSeconds = rateLimit(getClientIp(request));
@@ -140,84 +210,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const transporter = createTransport({
-      host: smtp.host,
-      port: smtp.port,
-      secure: smtp.secure,
-      auth: {
-        user: smtp.user,
-        pass: smtp.password,
-      },
-      connectionTimeout: 10_000,
-      greetingTimeout: 10_000,
-      socketTimeout: 20_000,
-    });
-
-    const submittedAt = new Intl.DateTimeFormat("nl-NL", {
-      dateStyle: "full",
-      timeStyle: "long",
-      timeZone: "Europe/Amsterdam",
-    }).format(new Date());
-
-    try {
-      const leadEmail = await transporter.sendMail({
-        from: { name: "Sitora website", address: smtp.user },
-        to: smtp.recipient,
-        replyTo: payload.email,
-        subject: `Nieuwe aanvraag voor gratis websiteadvies — ${payload.company}`,
-        text: [
-          `Ingediend: ${submittedAt}`,
-          `Aanvraagnummer: ${submissionId}`,
-          `Bronpagina: ${payload.sourcePage || "Onbekend"}`,
-          `Formulier: ${payload.kind}`,
-          `Naam: ${payload.name}`,
-          `Bedrijf: ${payload.company}`,
-          `E-mail: ${payload.email}`,
-          `Telefoon: ${payload.phone}`,
-          `Branche: ${payload.industry}`,
-          `Website: ${payload.currentWebsite || "Geen"}`,
-          `Land: ${payload.country || "-"}`,
-          `Plaats/werkgebied: ${payload.city || "-"}`,
-          `Project: ${payload.projectType || "-"}`,
-          `Pakket: ${payload.package || "-"}`,
-          `Doel: ${payload.goal || "-"}`,
-          `Functies: ${payload.features?.join(", ") || "-"}`,
-          `Startperiode: ${payload.startPeriod || "-"}`,
-          `Bericht: ${payload.message}`,
-        ].join("\n"),
-      });
-
-      console.info("[contact-form] Lead email accepted by SMTP server", {
-        submissionId,
-        messageId: leadEmail.messageId,
-      });
-    } catch (error) {
-      console.error("[contact-form] SMTP delivery failed", {
-        submissionId,
-        errorName: error instanceof Error ? error.name : "UnknownError",
-      });
-      return smtpErrorResponse();
-    }
-
-    try {
-      await transporter.sendMail({
-        from: { name: "Sitora website", address: smtp.user },
-        to: payload.email,
-        replyTo: smtp.recipient,
-        subject: "We hebben je aanvraag ontvangen — Sitora",
-        text: `Hallo ${payload.name},\n\nBedankt voor je aanvraag voor gratis websiteadvies. We hebben je gegevens goed ontvangen en nemen persoonlijk contact met je op.\n\nAanvraagnummer: ${submissionId}\n\nKlantenservice 24/7 bereikbaar\n${business.phoneDisplay}\n${business.email}\n\nMet vriendelijke groet,\n${business.ownerName}\nSitora`,
-      });
-    } catch (error) {
-      console.warn("[contact-form] Lead delivered, but confirmation email failed", {
-        submissionId,
-        errorName: error instanceof Error ? error.name : "UnknownError",
-      });
-    }
+    if (!(await deliverLead(payload, submissionId))) return providerErrorResponse();
 
     return NextResponse.json(
       {
         ok: true,
-        message: "Bedankt! Je aanvraag is succesvol verzonden.",
+        message: "Bedankt! Je aanvraag is succesvol naar Sitora verzonden.",
         submissionId,
       },
       { status: 200 },
@@ -227,6 +225,6 @@ export async function POST(request: NextRequest) {
       submissionId,
       errorName: error instanceof Error ? error.name : "UnknownError",
     });
-    return smtpErrorResponse();
+    return providerErrorResponse();
   }
 }
