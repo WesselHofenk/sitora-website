@@ -170,7 +170,7 @@ export function CompactAdviceForm({ initialOffer = "overig" }: { initialOffer?: 
       {formError ? <p id="compact-form-error" role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-bold text-red-800">{formError}</p> : null}
       {formSuccess ? <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm font-bold text-emerald-800"><Check className="mr-2 inline size-4" />{formSuccess}</p> : null}
       <button disabled={loading || submitted} type="submit" className="mt-6 inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-full bg-orange-500 px-5 py-3 font-black text-white transition-[background-color,transform] duration-150 hover:bg-orange-600 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60">{loading ? <><LoaderCircle className="size-4 animate-spin" />Bezig met versturen…</> : submitted ? <><Check className="size-4" />Ontvangen</> : <>Ontvang gratis websiteadvies <Send className="size-4" /></>}</button>
-      <p className="mt-4 text-xs leading-5 text-slate-500">Vrijblijvend. Na succesvolle verzending nemen we persoonlijk contact met je op.</p>
+      <p className="mt-4 text-xs leading-5 text-slate-500">Vrijblijvend. Na succesvolle verzending nemen we contact met je op.</p>
     </form>
   );
 }
@@ -202,7 +202,7 @@ export function DetailedAdviceForm({ initialOffer = "overig" }: { initialOffer?:
       {formError ? <p id="detailed-form-error" role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-sm font-bold text-red-800">{formError}</p> : null}
       {formSuccess ? <p role="status" className="mt-5 rounded-xl bg-emerald-50 p-4 text-sm font-bold text-emerald-800"><Check className="mr-2 inline size-4" />{formSuccess}</p> : null}
       <button disabled={loading || submitted} type="submit" className="mt-6 inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-full bg-orange-500 px-5 py-3 font-black text-white transition-[background-color,transform] duration-150 hover:bg-orange-600 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60">{loading ? <><LoaderCircle className="size-4 animate-spin" />Aanvraag versturen…</> : submitted ? <><Check className="size-4" />Aanvraag ontvangen</> : <>Ontvang gratis websiteadvies <Send className="size-4" /></>}</button>
-      <p className="mt-4 text-center text-xs text-slate-500">Versturen is vrijblijvend. Na succesvolle verzending nemen we persoonlijk contact met je op.</p>
+      <p className="mt-4 text-center text-xs text-slate-500">Versturen is vrijblijvend. Na succesvolle verzending nemen we contact met je op.</p>
     </form>
   );
 }

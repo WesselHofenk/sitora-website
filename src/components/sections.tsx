@@ -1,17 +1,7 @@
-import { ArrowUpRight, Check, Gauge, Headphones, Layers3, MessageSquareText, MousePointerClick, ShieldCheck, Smartphone, Sparkles, Wrench } from "lucide-react";
+import { ArrowUpRight, Check, Gauge, Headphones, Layers3, MousePointerClick, Smartphone, Sparkles, Wrench } from "lucide-react";
 import Link from "next/link";
 import { faqs, maintenanceOptions, packages, processSteps, projects, sectors } from "@/content/site";
 import { ButtonLink, SectionHeading } from "./ui";
-
-export function ProofStrip() {
-  const items = [
-    { icon: Sparkles, title: "Altijd maatwerk", text: "ontworpen voor jouw merk en doelgroep" },
-    { icon: MessageSquareText, title: "Persoonlijk contact", text: "één duidelijk aanspreekpunt" },
-    { icon: ShieldCheck, title: "Transparant", text: "heldere pakketten en prijzen" },
-    { icon: Wrench, title: "Geen verplicht onderhoud", text: "alleen betalen wanneer het nodig is" },
-  ];
-  return <section aria-label="Voordelen" className="relative z-10 mx-auto -mt-8 max-w-7xl px-5 sm:px-8"><div className="grid overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-blue-950/5 sm:grid-cols-2 lg:grid-cols-4">{items.map(({ icon: Icon, title, text }, index) => <div key={title} className={`flex gap-3 p-5 ${index ? "border-t border-slate-200 sm:border-l sm:border-t-0" : ""}`}><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-orange-50 text-orange-600"><Icon className="size-5" /></span><div><p className="font-black text-slate-950">{title}</p><p className="mt-1 text-xs leading-5 text-slate-500">{text}</p></div></div>)}</div></section>;
-}
 
 export function ServicesSection() {
   const services = [

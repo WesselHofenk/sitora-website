@@ -24,6 +24,7 @@ export const contact = {
 };
 
 export const navigation = [
+  { label: "Home", href: "/" },
   { label: "Diensten", href: "/diensten" },
   { label: "Branches", href: "/#branches" },
   { label: "Pakketten", href: "/pakketten" },
@@ -42,6 +43,8 @@ export type Sector = {
   eyebrow: string;
   title: string;
   description: string;
+  image: string;
+  imageAlt: string;
   problems: string[];
   features: { title: string; text: string }[];
   structure: string[];
@@ -66,6 +69,8 @@ export const sectors: Sector[] = [
     eyebrow: "Websites voor bouw en klus",
     title: "Laat kwaliteit, projecten en bereikbaarheid direct overtuigen",
     description: "Voor aannemers, installateurs en klusbedrijven maken we projecten, diensten en offerteaanvragen overzichtelijk zonder vakjargon te verbergen.",
+    image: "/images/branches/bouw-en-klus.jpg",
+    imageAlt: "Vakman aan het werk op een professionele bouwlocatie",
     problems: ["Projecten missen context", "Diensten lopen door elkaar", "Aanvragen bevatten te weinig informatie"],
     services: ["Projectportfolio", "Dienstenpagina's", "Offerte-intake", "Werkgebieden"],
     features: [
@@ -83,6 +88,8 @@ export const sectors: Sector[] = [
     eyebrow: "Websites voor automotive",
     title: "Van werkplaats tot showroom: geef iedere bezoeker de juiste route",
     description: "Voor garages, detailers, dealers en mobiliteitsdiensten combineren we vertrouwen, aanbod en afspraakmogelijkheden in één heldere website.",
+    image: "/images/branches/automotive.jpg",
+    imageAlt: "Automonteur werkt aan een auto in een professionele garage",
     problems: ["Diensten en aanbod raken vermengd", "Afspraken kosten te veel stappen", "Reviews en expertise staan los van elkaar"],
     services: ["Werkplaatsdiensten", "Voertuigaanbod", "Online afspraak", "Reviews"],
     features: [
@@ -100,6 +107,8 @@ export const sectors: Sector[] = [
     eyebrow: "Websites voor beauty en gezondheid",
     title: "Een rustige uitstraling die deskundigheid en vertrouwen uitstraalt",
     description: "Voor salons, studio's en praktijken maken we behandelingen begrijpelijk, resultaten zorgvuldig zichtbaar en boeken eenvoudig.",
+    image: "/images/branches/beauty-gezondheid.jpg",
+    imageAlt: "Moderne en verzorgde beautysalon met professionele behandelplekken",
     problems: ["Behandelingen zijn moeilijk te vergelijken", "Tarieven en verwachtingen blijven onduidelijk", "Boeken is omslachtig"],
     services: ["Behandelingen", "Online boeken", "Specialisten", "Voor- en nazorg"],
     features: [
@@ -117,6 +126,8 @@ export const sectors: Sector[] = [
     eyebrow: "Websites voor horeca",
     title: "Sfeer, aanbod en reserveren in één uitnodigende ervaring",
     description: "Voor restaurants, cafés, cateraars en verblijfsconcepten vertalen we sfeer naar een snelle website die ook onderweg prettig werkt.",
+    image: "/images/branches/horeca.jpg",
+    imageAlt: "Stijlvol restaurantinterieur met sfeervolle verlichting",
     problems: ["Menu's zijn slecht leesbaar op mobiel", "Reserveren zit verstopt", "Sfeer en praktische informatie sluiten niet aan"],
     services: ["Menu en arrangementen", "Reserveren", "Locatie en openingstijden", "Events"],
     features: [
@@ -133,13 +144,15 @@ export const sectors: Sector[] = [
     plural: "Wonen",
     eyebrow: "Websites voor wonen",
     title: "Maak stijl, collectie en advies tastbaar voordat iemand binnenstapt",
-    description: "Voor interieurstudio's, woonwinkels en adviseurs combineren we inspiratie, collecties en een persoonlijke adviesroute.",
+    description: "Voor interieurstudio's, woonwinkels en adviseurs combineren we inspiratie, collecties en een deskundige adviesroute.",
+    image: "/images/branches/wonen.jpg",
+    imageAlt: "Modern en warm ingericht interieur met eigentijdse meubels",
     problems: ["Inspiratie mist een duidelijke vervolgstap", "Collecties zijn versnipperd", "Advies en verkoop voelen los van elkaar"],
     services: ["Collecties", "Interieuradvies", "Inspiratie", "Afspraak maken"],
     features: [
       { title: "Visuele richting", text: "Een eigen art direction die aansluit op collectie, merk en doelgroep." },
       { title: "Collectie-overzicht", text: "Orden producten en stijlen zonder een generiek webwinkelgevoel." },
-      { title: "Advies als route", text: "Maak duidelijk wanneer persoonlijk advies waarde toevoegt en hoe je het boekt." },
+      { title: "Advies als route", text: "Maak duidelijk wanneer deskundig advies waarde toevoegt en hoe je het boekt." },
       { title: "Ruimte voor verhalen", text: "Cases, merken en materiaalkeuzes krijgen inhoud en context." },
     ],
     benefits: ["Sterkere merkbeleving", "Collecties overzichtelijk presenteren", "Meer adviesafspraken"], ...branchDefaults,
@@ -151,6 +164,8 @@ export const sectors: Sector[] = [
     eyebrow: "Websites voor de creatieve sector",
     title: "Een portfolio dat jouw signatuur laat spreken en toch verkoopt",
     description: "Voor ontwerpers, fotografen, makers en bureaus bouwen we een onderscheidend portfolio met een heldere commerciële route.",
+    image: "/images/branches/creatief.jpg",
+    imageAlt: "Fotograaf bewerkt beelden in een professionele creatieve studio",
     problems: ["Portfolio en aanbod vertellen twee verhalen", "Werk wordt zonder context getoond", "De contactstap blijft te vrijblijvend"],
     services: ["Portfolio", "Cases", "Diensten", "Projectaanvraag"],
     features: [
@@ -168,15 +183,17 @@ export const sectors: Sector[] = [
     eyebrow: "Websites voor dierenbedrijven",
     title: "Deskundig en benaderbaar voor baasjes én hun dieren",
     description: "Voor trimsalons, trainers, pensions en diergerichte diensten maken we aanbod, voorwaarden en afspraken rustig en duidelijk.",
+    image: "/images/branches/dieren.jpg",
+    imageAlt: "Dierenarts onderzoekt een hond in een professionele praktijk",
     problems: ["Diensten verschillen per dier of situatie", "Voorwaarden worden te laat gevonden", "Afspraken missen belangrijke intakegegevens"],
     services: ["Diensten per dier", "Afspraken", "Werkwijze", "Praktische informatie"],
     features: [
       { title: "Gerichte dienstkeuze", text: "Bezoekers kiezen op dier, behoefte of type begeleiding." },
       { title: "Intake vooraf", text: "Vraag ras, leeftijd en relevante bijzonderheden zorgvuldig uit." },
       { title: "Heldere voorwaarden", text: "Maak voorbereiding, annulering en veiligheid makkelijk vindbaar." },
-      { title: "Persoonlijk vertrouwen", text: "Laat visie, ervaring en omgang met dieren centraal staan." },
+      { title: "Vertrouwen door expertise", text: "Laat visie, ervaring en omgang met dieren centraal staan." },
     ],
-    benefits: ["Passende aanvragen ontvangen", "Voorwaarden vooraf duidelijk", "Persoonlijk vertrouwen opbouwen"], ...branchDefaults,
+    benefits: ["Passende aanvragen ontvangen", "Voorwaarden vooraf duidelijk", "Vertrouwen opbouwen"], ...branchDefaults,
   },
   {
     slug: "websites-voor-zakelijke-dienstverlening",
@@ -185,6 +202,8 @@ export const sectors: Sector[] = [
     eyebrow: "Websites voor zakelijke dienstverlening",
     title: "Maak expertise concreet en de volgende stap vanzelfsprekend",
     description: "Voor adviseurs, consultants en professionele dienstverleners vertalen we complexe kennis naar een overtuigend en toegankelijk verhaal.",
+    image: "/images/branches/zakelijke-dienstverlening.jpg",
+    imageAlt: "Zakelijke professionals bespreken plannen in een modern kantoor",
     problems: ["Expertise blijft abstract", "Diensten lijken op die van concurrenten", "Leads weten niet welke stap past"],
     services: ["Expertisegebieden", "Cases", "Kennismaking", "Kennisbank"],
     features: [
@@ -202,6 +221,8 @@ export const sectors: Sector[] = [
     eyebrow: "Websites voor retail",
     title: "Verbind winkel, collectie en service in één sterk merkverhaal",
     description: "Voor winkels en retailconcepten maken we assortiment, locaties en service online net zo aantrekkelijk en duidelijk als in de zaak.",
+    image: "/images/branches/retail.jpg",
+    imageAlt: "Stijlvolle kledingwinkel met een verzorgde productpresentatie",
     problems: ["Online en winkel voelen als twee merken", "Assortiment is lastig te ontdekken", "Praktische winkelinformatie zit verspreid"],
     services: ["Assortiment", "Winkellocaties", "Acties", "Service en contact"],
     features: [
@@ -219,6 +240,8 @@ export const sectors: Sector[] = [
     eyebrow: "Websites voor onderwijs",
     title: "Informatie die leerlingen, ouders en professionals snel begrijpen",
     description: "Voor opleiders, scholen en trainingsorganisaties ontwerpen we een toegankelijke route door aanbod, planning en aanmelden.",
+    image: "/images/branches/onderwijs.jpg",
+    imageAlt: "Docent en studenten in een moderne lesruimte",
     problems: ["Verschillende doelgroepen zoeken andere informatie", "Aanbod en planning zijn lastig te overzien", "Aanmelden bevat onnodige drempels"],
     services: ["Opleidingsaanbod", "Planning", "Aanmelden", "Informatie per doelgroep"],
     features: [
@@ -265,7 +288,7 @@ export const packages: Package[] = [
   {
     id: "maatwerk", name: "Maatwerk", price: "Vanaf € 3.495", cadence: "eenmalig, excl. btw", audience: "Voor complexe ambities en maatwerkfunctionaliteit", featured: false,
     description: "Een schaalbare oplossing wanneer je website onderdeel wordt van een groter digitaal proces.",
-    features: ["Alles uit Premium", "Onbeperkt aantal pagina's binnen de afgesproken scope", "Maatwerkfunctionaliteit", "API-koppelingen", "Portaal of dashboard", "Boekingssysteem", "Meertaligheid", "Schaalbare technische architectuur", "Persoonlijke begeleiding", "Planning op maat"],
+    features: ["Alles uit Premium", "Onbeperkt aantal pagina's binnen de afgesproken scope", "Maatwerkfunctionaliteit", "API-koppelingen", "Portaal of dashboard", "Boekingssysteem", "Meertaligheid", "Schaalbare technische architectuur", "Uitgebreide projectbegeleiding", "Planning op maat"],
     ownership: "De definitieve investering en planning volgen na scopebepaling. Hosting, domein en externe diensten worden transparant apart vastgelegd.",
   },
 ];

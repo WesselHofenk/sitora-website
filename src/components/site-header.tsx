@@ -12,6 +12,7 @@ const headerNavigation = navigation.filter((item) => item.label !== "FAQ");
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const isActive = (href: string) => href === "/" ? pathname === "/" : !href.startsWith("/#") && pathname === href;
 
   useEffect(() => {
     if (!open) return;
@@ -29,7 +30,7 @@ export function SiteHeader() {
         <Logo />
         <nav aria-label="Hoofdnavigatie" className="hidden items-center gap-1 xl:flex">
           {headerNavigation.map((item) => {
-            const active = pathname === item.href || (item.href.startsWith("/#") && pathname === "/");
+            const active = isActive(item.href);
             return <Link key={item.label} href={item.href} aria-current={active ? "page" : undefined} className="relative px-3 py-3 text-[13px] font-extrabold text-slate-600 transition-colors duration-200 hover:text-slate-950 after:absolute after:inset-x-3 after:bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-orange-500 after:transition-transform after:duration-200 hover:after:scale-x-100 aria-[current=page]:text-slate-950 aria-[current=page]:after:scale-x-100">{item.label}</Link>;
           })}
         </nav>
@@ -48,7 +49,10 @@ export function SiteHeader() {
           <nav aria-label="Mobiele navigatie" className="mx-auto flex min-h-full max-w-3xl flex-col px-5 pb-8 pt-8 sm:px-8">
             <p className="text-xs font-black uppercase tracking-[.2em] text-orange-400">Navigatie</p>
             <div className="mt-6 divide-y divide-white/10 border-y border-white/10">
-              {headerNavigation.map((item, index) => <Link key={item.label} href={item.href} onClick={() => setOpen(false)} className="group flex min-h-16 items-center justify-between gap-4 py-3 text-2xl font-black tracking-[-.035em] sm:text-3xl"><span><small className="mr-4 align-middle text-[10px] font-black text-orange-400">0{index + 1}</small>{item.label}</span><ArrowUpRight className="size-5 text-slate-500 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1" /></Link>)}
+              {headerNavigation.map((item, index) => {
+                const active = isActive(item.href);
+                return <Link key={item.label} href={item.href} aria-current={active ? "page" : undefined} onClick={() => setOpen(false)} className="group flex min-h-16 items-center justify-between gap-4 py-3 text-2xl font-black tracking-[-.035em] text-white transition-colors hover:text-orange-300 aria-[current=page]:text-orange-400 sm:text-3xl"><span><small className="mr-4 align-middle text-[10px] font-black text-orange-400">0{index + 1}</small>{item.label}</span><ArrowUpRight className="size-5 text-slate-500 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1" /></Link>;
+              })}
             </div>
             <div className="mt-auto pt-10"><Link href="/contact#advies" onClick={() => setOpen(false)} className="inline-flex min-h-12 items-center gap-2 rounded-full bg-orange-500 px-6 text-sm font-black text-white">Gratis websiteadvies <ArrowUpRight className="size-4" /></Link><p className="mt-5 max-w-sm text-sm leading-6 text-slate-400">Professionele maatwerkwebsites voor ondernemers en organisaties.</p></div>
           </nav>

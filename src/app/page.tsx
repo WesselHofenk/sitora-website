@@ -1,5 +1,5 @@
 import { HomeHero } from "@/components/home-hero";
-import { CompactLeadSection, ConceptSpotlight, IndustryCards, PainSection, PersonalSection, RevisionPromise, ValueSection } from "@/components/homepage-sections";
+import { CompactLeadSection, ConceptSpotlight, IndustryCards, PainSection, RevisionPromise, ValueSection } from "@/components/homepage-sections";
 import { FaqSection, MaintenanceSection, PackagesSection, ProcessSection } from "@/components/sections";
 
 export default function HomePage() {
@@ -13,7 +13,6 @@ export default function HomePage() {
       <ProcessSection />
       <PackagesSection preview />
       <MaintenanceSection />
-      <PersonalSection />
       <RevisionPromise />
       <FaqSection />
       <CompactLeadSection />
