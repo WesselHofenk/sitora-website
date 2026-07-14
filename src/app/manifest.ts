@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Sitora",
     short_name: "Sitora",
-    description: "Professionele maatwerkwebsites voor ondernemers en organisaties.",
+    description: "Heldere maatwerkwebsites voor bedrijven en organisaties.",
     start_url: "/",
     display: "standalone",
     background_color: "#f6f3ed",

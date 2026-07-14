@@ -13,13 +13,6 @@
   box-sizing: border-box;
 }
 
-/* Sitora gebruikt vlakken, contrast en witruimte voor groepering, zonder dunne lijnen. */
-*,
-*::before,
-*::after {
-  border-width: 0 !important;
-}
-
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 96px;
@@ -64,11 +57,6 @@ select,
 textarea,
 summary {
   touch-action: manipulation;
-}
-
-a,
-button {
-  text-decoration: none !important;
 }
 
 :focus-visible {

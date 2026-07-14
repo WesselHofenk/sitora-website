@@ -5,6 +5,7 @@ import { FormEvent, useState } from "react";
 import { validateLead, type FieldErrors, type FormKind, type LeadPayload } from "@/lib/lead-validation";
 import { normalizeOffer, offerOptions } from "@/lib/offer-options";
 import Link from "next/link";
+import { trackEvent } from "@/lib/analytics";
 
 const industries = ["Bouw en klus", "Automotive", "Beauty en gezondheid", "Horeca", "Wonen", "Creatieve sector", "Dieren", "Zakelijke dienstverlening", "Retail", "Onderwijs", "Andere branche"];
 
@@ -119,6 +120,8 @@ function useLeadForm(kind: FormKind) {
     if (Object.keys(clientErrors).length) {
       setErrors(clientErrors);
       setFormError("Controleer de gemarkeerde velden.");
+      trackEvent("form_error", { form_type: kind, error_type: "validation" });
+      window.requestAnimationFrame(() => formElement.querySelector<HTMLElement>("[aria-invalid='true']")?.focus());
       return;
     }
 
@@ -130,17 +133,20 @@ function useLeadForm(kind: FormKind) {
         body: JSON.stringify(payload),
       });
       const result = await readAdviceApiResult(response);
-      if (!response.ok || !result.ok) { setErrors(result.errors || {}); setFormError(result.message || "Versturen lukt niet."); return; }
+      if (!response.ok || !result.ok) { setErrors(result.errors || {}); setFormError(result.message || "Versturen lukt niet."); trackEvent("form_error", { form_type: kind, error_type: response.status === 429 ? "rate_limit" : "server" }); return; }
       if (result.submission && !(await deliverToFormSubmit(result.submission))) {
         setFormError("Je aanvraag is niet verzonden. Probeer het opnieuw of mail info@sitora.nl.");
+        trackEvent("form_error", { form_type: kind, error_type: "delivery" });
         return;
       }
       setSubmitted(true);
       setFormSuccess("Bedankt! Je aanvraag is succesvol naar Sitora verzonden.");
+      trackEvent("form_submit", { form_type: kind });
       formElement.reset();
     } catch (error) {
       console.error("[contact-form] Request failed", error);
       setFormError("Geen verbinding met de server. Controleer je internetverbinding en probeer opnieuw.");
+      trackEvent("form_error", { form_type: kind, error_type: "network" });
     }
     finally { setLoading(false); }
   }
@@ -154,17 +160,17 @@ export function CompactAdviceForm({ initialOffer = "overig" }: { initialOffer?: 
   const { submit, loading, submitted, errors, formError, formSuccess } = useLeadForm("compact");
   const offerDefault = normalizeOffer(initialOffer);
   return (
-    <form onSubmit={submit} noValidate className="rounded-[1.25rem] border border-white/10 bg-[#f6f3ed] p-6 text-slate-950 sm:p-9" aria-describedby={formError ? "compact-form-error" : undefined}>
+    <form onSubmit={submit} noValidate data-form-type="compact" className="rounded-[1.25rem] border border-white/10 bg-[#f6f3ed] p-6 text-slate-950 sm:p-9" aria-describedby={formError ? "compact-form-error" : undefined}>
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="grid gap-2 text-sm font-black text-slate-800">Naam <span aria-hidden="true" className="text-orange-600">*</span><input className={inputClass} name="name" autoComplete="name" required aria-invalid={!!errors.name} /><FieldError message={errors.name} /></label>
-        <label className="grid gap-2 text-sm font-black text-slate-800">Bedrijfsnaam <span aria-hidden="true" className="text-orange-600">*</span><input className={inputClass} name="company" autoComplete="organization" required aria-invalid={!!errors.company} /><FieldError message={errors.company} /></label>
-        <label className="grid gap-2 text-sm font-black text-slate-800">E-mailadres <span aria-hidden="true" className="text-orange-600">*</span><input className={inputClass} name="email" type="email" autoComplete="email" required aria-invalid={!!errors.email} /><FieldError message={errors.email} /></label>
-        <label className="grid gap-2 text-sm font-black text-slate-800">Telefoonnummer <span aria-hidden="true" className="text-orange-600">*</span><input className={inputClass} name="phone" type="tel" autoComplete="tel" required aria-invalid={!!errors.phone} /><FieldError message={errors.phone} /></label>
+        <label className="grid gap-2 text-sm font-black text-slate-800">Naam <span aria-hidden="true" className="text-orange-600">*</span><input className={inputClass} name="name" autoComplete="name" maxLength={100} required aria-invalid={!!errors.name} /><FieldError message={errors.name} /></label>
+        <label className="grid gap-2 text-sm font-black text-slate-800">Bedrijfsnaam <span className="font-normal text-slate-500">(optioneel)</span><input className={inputClass} name="company" autoComplete="organization" maxLength={140} aria-invalid={!!errors.company} /><FieldError message={errors.company} /></label>
+        <label className="grid gap-2 text-sm font-black text-slate-800">E-mailadres <span aria-hidden="true" className="text-orange-600">*</span><input className={inputClass} name="email" type="email" autoComplete="email" maxLength={180} required aria-invalid={!!errors.email} /><FieldError message={errors.email} /></label>
+        <label className="grid gap-2 text-sm font-black text-slate-800">Telefoonnummer <span className="font-normal text-slate-500">(optioneel)</span><input className={inputClass} name="phone" type="tel" inputMode="tel" autoComplete="tel" maxLength={40} aria-invalid={!!errors.phone} /><FieldError message={errors.phone} /></label>
         <label className="grid gap-2 text-sm font-black text-slate-800">Branche <span aria-hidden="true" className="text-orange-600">*</span><select className={inputClass} name="industry" defaultValue="" required aria-invalid={!!errors.industry}><option value="" disabled>Kies je branche</option>{industries.map((industry) => <option key={industry}>{industry}</option>)}</select><FieldError message={errors.industry} /></label>
         <label className="grid gap-2 text-sm font-black text-slate-800">Huidige website <span aria-hidden="true" className="text-orange-600">*</span><select className={inputClass} name="currentWebsite" defaultValue="" required aria-invalid={!!errors.currentWebsite}><option value="" disabled>Kies een optie</option><option>Ik heb nog geen website</option><option>Ik heb al een website</option></select><FieldError message={errors.currentWebsite} /></label>
         <label className="grid gap-2 text-sm font-black text-slate-800 sm:col-span-2">Waarmee kunnen we helpen? <span aria-hidden="true" className="text-orange-600">*</span><select key={offerDefault} className={inputClass} name="package" defaultValue={offerDefault} required aria-invalid={!!errors.package}>{offerOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select><FieldError message={errors.package} /></label>
       </div>
-      <label className="mt-5 grid gap-2 text-sm font-black text-slate-800">Bericht <span aria-hidden="true" className="text-orange-600">*</span><textarea className={textareaClass} name="message" required aria-invalid={!!errors.message} placeholder="Vertel kort waar je hulp bij zoekt." /><FieldError message={errors.message} /></label>
+      <label className="mt-5 grid gap-2 text-sm font-black text-slate-800">Bericht <span aria-hidden="true" className="text-orange-600">*</span><textarea className={textareaClass} name="message" maxLength={2000} required aria-invalid={!!errors.message} placeholder="Vertel kort waar je hulp bij zoekt." /><FieldError message={errors.message} /></label>
       <label className="mt-5 flex items-start gap-3 text-sm leading-6 text-slate-700"><input className="mt-1 size-4 shrink-0 accent-orange-500" type="checkbox" name="privacy" required aria-invalid={!!errors.privacy} /><span>Ik geef Sitora toestemming om contact op te nemen over deze aanvraag. Lees de <Link href="/privacyverklaring" className="font-bold underline">privacyverklaring</Link>. *</span></label><FieldError message={errors.privacy} />
       <div className="absolute -left-[10000px]" aria-hidden="true"><label>Website URL<input name="website_url" tabIndex={-1} autoComplete="off" /></label></div>
       {formError ? <p id="compact-form-error" role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-bold text-red-800">{formError}</p> : null}
@@ -180,12 +186,12 @@ export function DetailedAdviceForm({ initialOffer = "overig" }: { initialOffer?:
   const packageDefault = normalizeOffer(initialOffer);
   const features = ["Aparte dienstenpagina's", "Portfolio of cases", "Meertaligheid", "Boekings- of offertemodule", "Reviews-koppeling", "Analytics en conversiemeting"];
   return (
-    <form onSubmit={submit} noValidate className="rounded-[1.25rem] border border-slate-900/15 bg-white p-6 sm:p-9" aria-describedby={formError ? "detailed-form-error" : undefined}>
+    <form onSubmit={submit} noValidate data-form-type="detailed" className="rounded-[1.25rem] border border-slate-900/15 bg-white p-6 sm:p-9" aria-describedby={formError ? "detailed-form-error" : undefined}>
       <div className="grid gap-6 sm:grid-cols-2">
         <label className="grid gap-2 text-sm font-black">Naam *<input className={inputClass} name="name" autoComplete="name" required aria-invalid={!!errors.name} /><FieldError message={errors.name} /></label>
-        <label className="grid gap-2 text-sm font-black">Bedrijfsnaam *<input className={inputClass} name="company" autoComplete="organization" required aria-invalid={!!errors.company} /><FieldError message={errors.company} /></label>
+        <label className="grid gap-2 text-sm font-black">Bedrijfsnaam (optioneel)<input className={inputClass} name="company" autoComplete="organization" maxLength={140} aria-invalid={!!errors.company} /><FieldError message={errors.company} /></label>
         <label className="grid gap-2 text-sm font-black">E-mailadres *<input className={inputClass} name="email" type="email" autoComplete="email" required aria-invalid={!!errors.email} /><FieldError message={errors.email} /></label>
-        <label className="grid gap-2 text-sm font-black">Telefoonnummer *<input className={inputClass} name="phone" type="tel" autoComplete="tel" required aria-invalid={!!errors.phone} /><FieldError message={errors.phone} /></label>
+        <label className="grid gap-2 text-sm font-black">Telefoonnummer (optioneel)<input className={inputClass} name="phone" type="tel" inputMode="tel" autoComplete="tel" maxLength={40} aria-invalid={!!errors.phone} /><FieldError message={errors.phone} /></label>
         <label className="grid gap-2 text-sm font-black">Branche *<select className={inputClass} name="industry" defaultValue="" required aria-invalid={!!errors.industry}><option value="" disabled>Kies je branche</option>{industries.map((industry) => <option key={industry}>{industry}</option>)}</select><FieldError message={errors.industry} /></label>
         <label className="grid gap-2 text-sm font-black">Land *<select className={inputClass} name="country" defaultValue="" required aria-invalid={!!errors.country}><option value="" disabled>Kies een land</option><option>Nederland</option><option>België</option></select><FieldError message={errors.country} /></label>
         <label className="grid gap-2 text-sm font-black">Plaats of werkgebied *<input className={inputClass} name="city" autoComplete="address-level2" required aria-invalid={!!errors.city} /><FieldError message={errors.city} /></label>

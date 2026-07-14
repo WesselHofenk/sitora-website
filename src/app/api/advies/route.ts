@@ -52,7 +52,7 @@ function formSubmitFields(payload: LeadPayload, submissionId: string) {
   }).format(new Date());
 
   return {
-    _subject: `Nieuwe aanvraag voor gratis websiteadvies — ${payload.company}`,
+    _subject: `Nieuwe aanvraag voor gratis websiteadvies — ${payload.company || payload.name}`,
     _template: "table",
     _captcha: "false",
     _replyto: payload.email || "",
@@ -81,6 +81,11 @@ function formSubmitFields(payload: LeadPayload, submissionId: string) {
 export async function POST(request: NextRequest) {
   const submissionId = crypto.randomUUID();
   let requestBody: unknown;
+
+  const declaredSize = Number(request.headers.get("content-length") || 0);
+  if (declaredSize > 25_000) {
+    return NextResponse.json({ ok: false, message: "De aanvraag is te groot." }, { status: 413 });
+  }
 
   try {
     requestBody = await request.json();

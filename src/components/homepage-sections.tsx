@@ -1,15 +1,29 @@
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { contact, sectors } from "@/content/site";
+import { business, contact, sectors } from "@/content/site";
 import { CompactAdviceForm } from "./lead-forms";
 import { ProjectsSection } from "./sections";
 import { ButtonLink, SectionHeading } from "./ui";
 
 export function ConceptSpotlight() { return <ProjectsSection />; }
 
+export function TrustStrip() {
+  const facts = [
+    ["Direct contact", business.ownerName],
+    ["Transparant", "Pakketten vanaf € 695 excl. btw"],
+    ["Werkgebied", business.serviceArea],
+    ["Bedrijfsgegevens", `KvK ${business.chamberOfCommerce}`],
+  ];
+  return <section aria-label="Feiten over Sitora" className="bg-white py-6"><div className="mx-auto grid max-w-[86rem] gap-3 px-5 sm:grid-cols-2 sm:px-8 lg:grid-cols-4 lg:px-10">{facts.map(([label, value]) => <div key={label} className="rounded-xl bg-slate-100 p-4"><p className="text-[10px] font-black uppercase tracking-wider text-orange-600">{label}</p><p className="mt-2 text-sm font-black text-slate-900">{value}</p></div>)}</div></section>;
+}
+
+export function FounderTrust() {
+  return <section className="bg-white py-16 sm:py-20"><div className="mx-auto grid max-w-[86rem] gap-8 px-5 sm:px-8 lg:grid-cols-[.7fr_1.3fr] lg:items-center lg:px-10"><div className="grid min-h-64 place-items-center rounded-3xl bg-[#07111f] p-8 text-center text-white"><span className="grid size-20 place-items-center rounded-full bg-orange-500 text-2xl font-black" aria-hidden="true">WH</span><p className="mt-5 font-black">{business.ownerName}</p><p className="mt-2 text-sm text-slate-400">Eigenaar van Sitora</p></div><div><SectionHeading eyebrow="Persoonlijk verantwoordelijk" title="Rechtstreeks contact met degene die je website uitwerkt" description={`${business.ownerName} is het vaste aanspreekpunt voor intake, keuzes, feedback en oplevering. Zo blijven afspraken, scope en vervolgstappen overzichtelijk.`} /><ul className="mt-7 grid gap-3 sm:grid-cols-2">{["Vooraf duidelijk wat binnen de scope valt", "Feedback op afgesproken momenten", "Geen verplicht onderhoudsabonnement", "Externe kosten apart benoemd"].map((item) => <li key={item} className="rounded-xl bg-slate-100 p-4 text-sm font-bold text-slate-800">{item}</li>)}</ul><ButtonLink href="/over-sitora" variant="secondary" className="mt-7">Lees over Sitora</ButtonLink></div></div></section>;
+}
+
 export function IndustryCards() {
-  return <section id="branches" className="bg-[#f6f3ed] pb-16 pt-12 sm:pb-20 sm:pt-16 lg:pb-24"><div className="mx-auto max-w-[86rem] px-5 sm:px-8 lg:px-10"><div className="grid gap-10 lg:grid-cols-[.7fr_1.3fr]"><SectionHeading eyebrow="Websites voor iedere branche" title="Jouw branche, doelgroep en verhaal vormen het vertrekpunt" description="Geen standaardtemplate met andere kleuren, maar een eigen structuur, uitstraling en contactroute voor jouw bedrijf." /><div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">{sectors.map((sector, index) => <Link key={sector.slug} href={`/${sector.slug}`} className="group grid items-center gap-5 rounded-2xl bg-white p-5 shadow-sm sm:grid-cols-[8rem_1fr] lg:grid-cols-[11rem_1fr_auto] lg:gap-7"><div className="relative h-40 overflow-hidden rounded-2xl bg-slate-200 sm:h-28"><Image src={sector.image} alt={sector.imageAlt} fill sizes="(max-width: 639px) calc(100vw - 4.5rem), 176px" className="object-cover" /><span className="absolute left-3 top-3 rounded-full bg-[#07111f]/90 px-2.5 py-1 text-[10px] font-black text-white">{String(index + 1).padStart(2, "0")}</span></div><div><h3 className="text-2xl font-black tracking-[-.04em] text-slate-950 sm:text-3xl">{sector.plural}</h3><p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">{sector.features[0].text}</p></div><span className="hidden size-11 place-items-center rounded-full bg-slate-100 transition-[background-color,color,transform] duration-200 group-hover:translate-x-1 group-hover:bg-orange-500 group-hover:text-white lg:grid"><ArrowRight className="size-4" aria-hidden="true" /></span></Link>)}</div></div></div></section>;
+  return <section id="branches" className="bg-[#f6f3ed] pb-16 pt-12 sm:pb-20 sm:pt-16 lg:pb-24"><div className="mx-auto max-w-[86rem] px-5 sm:px-8 lg:px-10"><div className="grid gap-10 lg:grid-cols-[.7fr_1.3fr]"><div><SectionHeading eyebrow="Branches" title="De klantvraag bepaalt de structuur" description="Een offerteaanvraag voor een vakbedrijf vraagt iets anders dan een reservering, portfolio of opleidingskeuze. Daarom krijgt iedere branche een eigen informatieroute." /><ButtonLink href="/branches" variant="secondary" className="mt-7">Bekijk alle branches</ButtonLink></div><div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">{sectors.slice(0, 5).map((sector, index) => <Link key={sector.slug} href={`/${sector.slug}`} className="group grid items-center gap-5 rounded-2xl bg-white p-5 shadow-sm sm:grid-cols-[8rem_1fr] lg:grid-cols-[11rem_1fr_auto] lg:gap-7"><div className="relative h-40 overflow-hidden rounded-2xl bg-slate-200 sm:h-28"><Image src={sector.image} alt={sector.imageAlt} fill sizes="(max-width: 639px) calc(100vw - 4.5rem), 176px" className="object-cover" /><span className="absolute left-3 top-3 rounded-full bg-[#07111f]/90 px-2.5 py-1 text-[10px] font-black text-white">{String(index + 1).padStart(2, "0")}</span></div><div><h3 className="text-2xl font-black tracking-[-.04em] text-slate-950 sm:text-3xl">{sector.plural}</h3><p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">{sector.visitorIntent}</p></div><span className="hidden size-11 place-items-center rounded-full bg-slate-100 transition-[background-color,color,transform] duration-200 group-hover:translate-x-1 group-hover:bg-orange-500 group-hover:text-white lg:grid"><ArrowRight className="size-4" aria-hidden="true" /></span></Link>)}</div></div></div></section>;
 }
 
 export function ValueSection() {

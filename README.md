@@ -1,6 +1,6 @@
 # Sitora website
 
-Productiegerichte Next.js-website voor Sitora, een websitespecialist voor ondernemers en organisaties in uiteenlopende branches in Nederland en Nederlandstalig België.
+Productiegerichte Next.js-website voor Sitora, met maatwerkwebsites voor mkb, dienstverleners, vakbedrijven en organisaties in Nederland en Nederlandstalig België.
 
 ## Starten
 
@@ -50,13 +50,13 @@ De formulieren sturen JSON naar `src/app/api/advies/route.ts`. De route bevat:
 
 De browser laat de aanvraag eerst controleren door de same-origin route `/api/advies`. Pas na geldige servervalidatie stuurt de browser de genormaliseerde velden als JSON naar FormSubmit. De AJAX-endpoint ondersteunt cross-origin verzoeken; succes wordt alleen getoond wanneer zowel de eigen API-route als FormSubmit de aanvraag accepteert. Deze opzet voorkomt de HTTP 403 die FormSubmit geeft aan rechtstreekse verzoeken vanuit Vercel-serverless IP-adressen.
 
-Er zijn geen API-keys of server-side environment variables nodig voor formulierbezorging. Na de eerste geldige inzending stuurt FormSubmit een eenmalige activatiemail naar `info@sitora.nl`. Klik op de bevestigingslink om bezorging te activeren. Niet-bevestigde inzendingen worden volgens FormSubmit maximaal 30 dagen bewaard.
+Er zijn geen API-keys of server-side environment variables nodig voor formulierbezorging. Na de eerste geldige inzending stuurt FormSubmit een eenmalige activatiemail naar `info@sitora.nl`. Klik op de bevestigingslink om bezorging te activeren. Controleer de actuele bewaartermijn en verwerkersvoorwaarden rechtstreeks bij FormSubmit voordat de juridische documenten worden goedgekeurd.
 
-De aanvraag bevat minimaal Naam, Bedrijfsnaam, E-mailadres, Telefoonnummer, Branche, Huidige website, Pakket of dienst en Bericht. URL-parameters `pakket` en `dienst` selecteren de juiste optie automatisch. Het uitgebreide formulier stuurt daarnaast land, werkgebied, project, doel, functies en startperiode mee. `Reply-To` wordt ingesteld op het ingevulde e-mailadres.
+De compacte aanvraag vereist naam, e-mailadres, branche, website-status, pakket of dienst, bericht en toestemming. Bedrijfsnaam en telefoonnummer zijn optioneel. URL-parameters `pakket` en `dienst` selecteren uitsluitend bekende waarden; ongeldige waarden vallen terug op `overig`. Het uitgebreide formulier stuurt daarnaast land, werkgebied, project, doel, functies en startperiode mee. `Reply-To` wordt ingesteld op het ingevulde e-mailadres.
 
 ## Cookiekeuze en analytics
 
-De toestemmingsinterface ondersteunt noodzakelijk, analytics en marketing. Optionele scripts laden alleen als:
+De toestemmingsinterface is versieerbaar en toont alleen optionele categorieën waarvoor werkelijk een geldig ID is geconfigureerd. Optionele scripts laden alleen als:
 
 1. de bezoeker toestemming geeft; én
 2. het bijbehorende ID is ingesteld.
@@ -64,14 +64,16 @@ De toestemmingsinterface ondersteunt noodzakelijk, analytics en marketing. Optio
 ```env
 NEXT_PUBLIC_GA_ID=
 NEXT_PUBLIC_META_PIXEL_ID=
+NEXT_PUBLIC_ANALYTICS_DEBUG=false
 ```
 
-De keuze wordt lokaal opgeslagen en is opnieuw te openen via **Cookie-instellingen** in de footer.
+De keuze wordt lokaal opgeslagen onder `sitora-consent` en is opnieuw te openen via **Cookievoorkeuren** in de footer. Bij intrekken worden bekende first-party trackingcookies verwijderd voor zover de browser dat toestaat.
 
 ## Routes
 
 - `/`
 - `/diensten`
+- `/branches`
 - `/websites-voor-bouw-en-klus`
 - `/websites-voor-automotive`
 - `/websites-voor-beauty-en-gezondheid`
@@ -91,7 +93,7 @@ De keuze wordt lokaal opgeslagen en is opnieuw te openen via **Cookie-instelling
 - `/privacyverklaring`
 - `/cookieverklaring`
 - `/algemene-voorwaarden`
-- `/bedankt`
+- `/bedankt` (compatibiliteitsroute, `noindex` en niet in de sitemap)
 
 Daarnaast zijn een eigen 404, `robots.txt`, sitemap, manifest, favicon en gegenereerde social image aanwezig.
 

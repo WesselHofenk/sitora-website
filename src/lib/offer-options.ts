@@ -8,6 +8,8 @@ export const offerOptions = [
   { value: "overig", label: "Overige vraag" },
 ] as const;
 
+export const offerValues = new Set<string>(offerOptions.map((option) => option.value));
+
 export function normalizeOffer(requested?: string) {
-  return offerOptions.some((option) => option.value === requested) ? requested! : "overig";
+  return requested && offerValues.has(requested) ? requested : "overig";
 }

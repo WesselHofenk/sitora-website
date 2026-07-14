@@ -1,3 +1,5 @@
+import { offerValues } from "./offer-options.ts";
+
 export type FormKind = "compact" | "detailed";
 
 export type LeadPayload = {
@@ -42,11 +44,11 @@ export function normalizeLead(input: unknown): LeadPayload {
 export function validateLead(payload: LeadPayload): FieldErrors {
   const errors: FieldErrors = {};
   if (!payload.name || payload.name.length < 2) errors.name = "Vul je naam in.";
-  if (!payload.company || payload.company.length < 2) errors.company = "Vul je bedrijfsnaam in.";
+  if (payload.company && payload.company.length < 2) errors.company = "Vul minimaal 2 tekens in of laat dit veld leeg.";
   if (!payload.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)) errors.email = "Vul een geldig e-mailadres in.";
-  if (!payload.phone || payload.phone.replace(/\D/g, "").length < 8) errors.phone = "Vul een geldig telefoonnummer in.";
+  if (payload.phone && payload.phone.replace(/\D/g, "").length < 8) errors.phone = "Vul een geldig telefoonnummer in of laat dit veld leeg.";
   if (!payload.industry) errors.industry = "Kies je branche.";
-  if (!payload.package) errors.package = "Kies een pakket, onderhoudsoptie of overige vraag.";
+  if (!payload.package || !offerValues.has(payload.package)) errors.package = "Kies een geldige pakket-, onderhouds- of overige vraag.";
   if (payload.kind === "compact" && !payload.currentWebsite) errors.currentWebsite = "Kies of je al een website hebt.";
   if (!payload.message || payload.message.length < 10) errors.message = "Schrijf een bericht van minimaal 10 tekens.";
   if (!payload.privacy) errors.privacy = "Geef toestemming om contact met je op te nemen.";

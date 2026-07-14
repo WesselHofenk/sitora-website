@@ -6,15 +6,15 @@ export function HomeHero() {
     <section className="overflow-hidden bg-[#07111f] text-white">
       <div className="mx-auto max-w-[86rem] px-5 pb-16 pt-12 sm:px-8 sm:pb-20 sm:pt-20 lg:px-10 lg:pb-24">
         <div className="hero-reveal">
-          <p className="text-xs font-black uppercase tracking-[.22em] text-orange-400">Maatwerkwebsites voor ondernemers en organisaties</p>
+          <p className="text-xs font-black uppercase tracking-[.22em] text-orange-400">Voor mkb, dienstverleners, vakbedrijven en organisaties</p>
           <h1 className="mt-6 max-w-6xl text-balance text-[clamp(2.5rem,8vw,5.5rem)] font-black leading-[.98] tracking-[-.06em]">
-            Een professionele website die <span className="text-orange-400">past bij jouw bedrijf.</span>
+            Een heldere website die <span className="text-orange-400">vertrouwen opbouwt en contact eenvoudiger maakt.</span>
           </h1>
         </div>
 
         <div className="mt-9 grid gap-8 lg:grid-cols-[1.2fr_.8fr] lg:items-end">
           <div className="max-w-2xl hero-reveal-delayed">
-            <p className="text-lg leading-8 text-slate-300 sm:text-xl">Sitora ontwerpt en bouwt unieke websites voor uiteenlopende branches. Geen standaardtemplate, maar een doordachte website voor jouw merk, doelgroep en doelen.</p>
+            <p className="text-lg leading-8 text-slate-300 sm:text-xl">Sitora ontwerpt en bouwt maatwerkwebsites voor bedrijven en organisaties in Nederland en Nederlandstalig België. Met een duidelijke scope, transparante pakketprijzen en een logische route voor je bezoekers.</p>
             <div className="mt-7 flex flex-col items-stretch gap-3 sm:flex-row sm:items-start">
               <ButtonLink href="/contact#advies">Ontvang gratis websiteadvies</ButtonLink>
               <ButtonLink href="/pakketten" variant="dark">Bekijk de pakketten</ButtonLink>

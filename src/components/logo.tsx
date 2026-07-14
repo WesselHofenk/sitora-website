@@ -6,11 +6,11 @@ export function Logo({ light = false }: { light?: boolean }) {
     <Link href="/" aria-label="Ga naar de homepage" className={light ? "inline-flex shrink-0 items-center overflow-hidden rounded-xl bg-white px-3 py-2 shadow-sm" : "inline-flex shrink-0 items-center py-1"}>
       <Image
         src={light ? "/images/sitora-logo.png" : "/images/sitora-logo-transparent.png"}
-        alt="Sitora.nl"
+        alt="Sitora"
         width={202}
         height={66}
         priority={!light}
-        className="h-10 w-auto sm:h-11"
+        className="h-auto w-32 sm:w-36"
       />
     </Link>
   );
