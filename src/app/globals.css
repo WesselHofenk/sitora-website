@@ -13,6 +13,13 @@
   box-sizing: border-box;
 }
 
+/* Sitora gebruikt vlakken, contrast en witruimte voor groepering, zonder dunne lijnen. */
+*,
+*::before,
+*::after {
+  border-width: 0 !important;
+}
+
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 96px;
@@ -27,6 +34,29 @@ body {
   overflow-x: hidden;
 }
 
+main {
+  overflow: clip;
+}
+
+img,
+svg,
+video {
+  max-width: 100%;
+}
+
+img,
+video {
+  height: auto;
+}
+
+h1,
+h2,
+h3,
+p,
+a {
+  overflow-wrap: anywhere;
+}
+
 a,
 button,
 input,
@@ -34,6 +64,11 @@ select,
 textarea,
 summary {
   touch-action: manipulation;
+}
+
+a,
+button {
+  text-decoration: none !important;
 }
 
 :focus-visible {
@@ -56,19 +91,8 @@ a:active {
   color: var(--navy);
 }
 
-.blueprint {
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-  background-size: 42px 42px;
-}
-
 .hero-surface {
   background-image: radial-gradient(circle at 78% 35%, rgba(59, 130, 246, 0.11), transparent 32rem);
-}
-
-.editorial-grid {
-  background-image: linear-gradient(90deg, transparent calc(25% - .5px), rgba(255,255,255,.045) 25%, transparent calc(25% + .5px), transparent calc(50% - .5px), rgba(255,255,255,.045) 50%, transparent calc(50% + .5px), transparent calc(75% - .5px), rgba(255,255,255,.045) 75%, transparent calc(75% + .5px));
 }
 
 .hero-reveal {
@@ -118,5 +142,47 @@ a:active {
   .hero-reveal-delayed,
   .hero-visual-reveal {
     animation: none !important;
+  }
+}
+
+section[class~="py-24"] {
+  padding-block: 4rem !important;
+}
+
+section[class~="pb-24"] {
+  padding-bottom: 4rem !important;
+}
+
+@media (min-width: 640px) {
+  section[class~="sm:py-32"],
+  section[class~="sm:py-28"] {
+    padding-block: 5rem !important;
+  }
+
+  section[class~="sm:pb-32"] {
+    padding-bottom: 5rem !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  section[class~="lg:py-40"],
+  section[class~="lg:py-28"] {
+    padding-block: 6rem !important;
+  }
+}
+
+@media (max-width: 767px) {
+  body {
+    padding-bottom: 4.75rem;
+  }
+
+  body:has(#mobiel-menu) .mobile-action-bar {
+    display: none;
+  }
+}
+
+@media (max-width: 479px) {
+  [class~="text-5xl"] {
+    font-size: clamp(2.25rem, 11vw, 3rem) !important;
   }
 }

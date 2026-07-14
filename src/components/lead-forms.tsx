@@ -147,7 +147,7 @@ function useLeadForm(kind: FormKind) {
   return { submit, loading, submitted, errors, formError, formSuccess };
 }
 
-const inputClass = "h-12 w-full rounded-lg border border-slate-900/20 bg-white px-4 text-base text-slate-950 outline-none transition-[border-color,box-shadow] duration-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10";
+const inputClass = "h-12 w-full rounded-lg bg-slate-100 px-4 text-base text-slate-950 outline-none transition-[background-color,box-shadow] duration-200 focus:bg-white focus:ring-4 focus:ring-orange-500/15";
 const textareaClass = `${inputClass} h-auto min-h-28 py-3`;
 
 export function CompactAdviceForm({ initialOffer = "overig" }: { initialOffer?: string }) {
