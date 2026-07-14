@@ -1,6 +1,6 @@
 # Sitora website
 
-Productiegerichte Next.js-website voor Sitora, een websitespecialist voor vak-, bouw- en installatiebedrijven in Nederland en Nederlandstalig België.
+Productiegerichte Next.js-website voor Sitora, een websitespecialist voor ondernemers en organisaties in uiteenlopende branches in Nederland en Nederlandstalig België.
 
 ## Starten
 
@@ -29,9 +29,10 @@ Alle herbruikbare inhoud staat in `src/content/site.ts`:
 - `business`: eigenaar, telefoon, WhatsApp, e-mail, KvK, btw-nummer, openingstijden en domein;
 - `navigation`: navigatie;
 - `sectors`: brancheteksten, functies, structuren en branchespecifieke FAQ;
-- `packages`: prijzen, inhoud, eigendom en abonnementsvoorwaarden;
+- `packages`: eenmalige pakketprijzen, inhoud en eigendom;
+- `maintenanceOptions`: losse onderhoudsbeurten zonder verplichte looptijd;
 - `processSteps`: werkwijze;
-- `projects`: vijf expliciet fictieve conceptontwerpen;
+- `projects`: vier expliciet fictieve conceptontwerpen;
 - `faqs`: algemene FAQ.
 
 De publieke bedrijfsgegevens staan centraal in `src/content/site.ts`. Vervang `portraitPath` door het pad naar een echte, geoptimaliseerde portretfoto zodra die beschikbaar is.
@@ -51,7 +52,7 @@ De browser laat de aanvraag eerst controleren door de same-origin route `/api/ad
 
 Er zijn geen API-keys of server-side environment variables nodig voor formulierbezorging. Na de eerste geldige inzending stuurt FormSubmit een eenmalige activatiemail naar `info@sitora.nl`. Klik op de bevestigingslink om bezorging te activeren. Niet-bevestigde inzendingen worden volgens FormSubmit maximaal 30 dagen bewaard.
 
-De aanvraag bevat minimaal Naam, Bedrijfsnaam, E-mailadres, Telefoonnummer, Branche, Huidige website en Bericht. Het uitgebreide formulier stuurt daarnaast land, werkgebied, project, pakket, doel, functies en startperiode mee. `Reply-To` wordt ingesteld op het ingevulde e-mailadres.
+De aanvraag bevat minimaal Naam, Bedrijfsnaam, E-mailadres, Telefoonnummer, Branche, Huidige website, Pakket of dienst en Bericht. URL-parameters `pakket` en `dienst` selecteren de juiste optie automatisch. Het uitgebreide formulier stuurt daarnaast land, werkgebied, project, doel, functies en startperiode mee. `Reply-To` wordt ingesteld op het ingevulde e-mailadres.
 
 ## Cookiekeuze en analytics
 
@@ -70,11 +71,17 @@ De keuze wordt lokaal opgeslagen en is opnieuw te openen via **Cookie-instelling
 ## Routes
 
 - `/`
-- `/websites-voor-loodgieters`
-- `/websites-voor-elektriciens`
-- `/websites-voor-schilders`
-- `/websites-voor-dakdekkers`
-- `/websites-voor-aannemers`
+- `/diensten`
+- `/websites-voor-bouw-en-klus`
+- `/websites-voor-automotive`
+- `/websites-voor-beauty-en-gezondheid`
+- `/websites-voor-horeca`
+- `/websites-voor-wonen`
+- `/websites-voor-de-creatieve-sector`
+- `/websites-voor-dierenbedrijven`
+- `/websites-voor-zakelijke-dienstverlening`
+- `/websites-voor-retail`
+- `/websites-voor-onderwijs`
 - `/pakketten`
 - `/werkwijze`
 - `/voorbeelden`
@@ -88,13 +95,13 @@ De keuze wordt lokaal opgeslagen en is opnieuw te openen via **Cookie-instelling
 
 Daarnaast zijn een eigen 404, `robots.txt`, sitemap, manifest, favicon en gegenereerde social image aanwezig.
 
-De oude route `/over-klusgroei` blijft als compatibele redirect naar `/over-sitora` bestaan.
+De oude route `/over-klusgroei` en de vroegere vakspecifieke branche-URL's blijven als compatibele redirects bestaan.
 
 ## Afbeeldingen
 
 Beelden staan lokaal in `public/images`. Vervang deze stockbeelden vóór livegang bij voorkeur door eigen, aantoonbaar bruikbare projectfotografie. Alt-teksten en verwijzingen zijn centraal of bij het component aanpasbaar.
 
-De loodgieter-toolphoto is van Matt Artz en wordt lokaal gebruikt onder de Unsplash License; overige stockbeelden moeten vóór publicatie eveneens op herkomst en gebruiksrecht worden gecontroleerd.
+Historische stockbeelden zijn nog lokaal aanwezig maar worden niet meer in de algemene websitepresentatie gebruikt. Verwijder ongebruikte assets pas nadat is bevestigd dat externe of oudere pagina's ze niet nodig hebben.
 
 ## Deployen op hosting met een Next.js-runtime
 
@@ -116,7 +123,7 @@ De route `/api/advies` is servercode en werkt niet wanneer alleen statische HTML
 - laat privacy-, cookie- en voorwaardenpagina's juridisch controleren;
 - configureer en test echte e-mailbezorging;
 - koppel het apexdomein en laat `www.sitora.nl` daarna naar de apexvariant verwijzen;
-- controleer offerte en overeenkomst op eigendom, abonnement en opzegging;
+- controleer offerte en overeenkomst op scope, eigendom, betaling en losse onderhoudsbeurten;
 - voeg alleen echte reviews, certificeringen of klantcases toe;
 - test telefoon, WhatsApp, domein en formulieren op echte apparaten.
 

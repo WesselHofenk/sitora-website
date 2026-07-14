@@ -46,6 +46,7 @@ export function validateLead(payload: LeadPayload): FieldErrors {
   if (!payload.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)) errors.email = "Vul een geldig e-mailadres in.";
   if (!payload.phone || payload.phone.replace(/\D/g, "").length < 8) errors.phone = "Vul een geldig telefoonnummer in.";
   if (!payload.industry) errors.industry = "Kies je branche.";
+  if (!payload.package) errors.package = "Kies een pakket, onderhoudsoptie of overige vraag.";
   if (payload.kind === "compact" && !payload.currentWebsite) errors.currentWebsite = "Kies of je al een website hebt.";
   if (!payload.message || payload.message.length < 10) errors.message = "Schrijf een bericht van minimaal 10 tekens.";
   if (!payload.privacy) errors.privacy = "Geef toestemming om contact met je op te nemen.";
@@ -53,7 +54,6 @@ export function validateLead(payload: LeadPayload): FieldErrors {
     if (!payload.country) errors.country = "Kies Nederland of België.";
     if (!payload.city) errors.city = "Vul je plaats of werkgebied in.";
     if (!payload.projectType) errors.projectType = "Kies nieuwbouw of redesign.";
-    if (!payload.package) errors.package = "Kies een pakket of 'ik weet het nog niet'.";
     if (!payload.goal) errors.goal = "Beschrijf je belangrijkste doel.";
     if (!payload.startPeriod) errors.startPeriod = "Kies een gewenste startperiode.";
   }

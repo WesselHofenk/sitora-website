@@ -50,7 +50,7 @@ export function SiteHeader() {
             <div className="mt-6 divide-y divide-white/10 border-y border-white/10">
               {headerNavigation.map((item, index) => <Link key={item.label} href={item.href} onClick={() => setOpen(false)} className="group flex min-h-16 items-center justify-between gap-4 py-3 text-2xl font-black tracking-[-.035em] sm:text-3xl"><span><small className="mr-4 align-middle text-[10px] font-black text-orange-400">0{index + 1}</small>{item.label}</span><ArrowUpRight className="size-5 text-slate-500 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1" /></Link>)}
             </div>
-            <div className="mt-auto pt-10"><Link href="/contact#advies" onClick={() => setOpen(false)} className="inline-flex min-h-12 items-center gap-2 rounded-full bg-orange-500 px-6 text-sm font-black text-white">Gratis websiteadvies <ArrowUpRight className="size-4" /></Link><p className="mt-5 max-w-sm text-sm leading-6 text-slate-400">Professionele websites voor vakbedrijven in Nederland en België.</p></div>
+            <div className="mt-auto pt-10"><Link href="/contact#advies" onClick={() => setOpen(false)} className="inline-flex min-h-12 items-center gap-2 rounded-full bg-orange-500 px-6 text-sm font-black text-white">Gratis websiteadvies <ArrowUpRight className="size-4" /></Link><p className="mt-5 max-w-sm text-sm leading-6 text-slate-400">Professionele maatwerkwebsites voor ondernemers en organisaties.</p></div>
           </nav>
         </div>
       ) : null}

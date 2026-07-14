@@ -12,11 +12,11 @@ Intern document. Niet publiceren. Laat overeenkomsten, voorwaarden en privacytek
 ## 2. Offerte en overeenkomst
 
 - Benoem pakket, pagina's, functies, teksten, SEO-basis, integraties, hosting, onderhoud en uitsluitingen.
-- Leg correctierondes vast: Start 1, Professional 2, Maatwerk 3, tenzij schriftelijk anders overeengekomen.
+- Leg correctierondes vast volgens het gekozen pakket en de geaccepteerde offerte. Business en de daarop voortbouwende pakketten bevatten twee rondes binnen de afgesproken scope.
 - Betaalmodel eenmalig project: 50% vóór start en 50% vóór publicatie.
 - Meerwerk uitsluitend na akkoord tegen een vooraf afgesproken vast uurtarief; actueel tarief op aanvraag.
 - Leg eigendom na volledige betaling vast, met uitzondering van licenties, tooling en diensten van derden.
-- Abonnement: setup, maandbedrag, minimale looptijd, inbegrepen wijzigingen, opzegging en overdracht expliciet opnemen.
+- Onderhoud: leg per aangevraagde beurt de gekozen optie, scope, prijs en eventuele extra werkzaamheden vast. Er geldt geen verplichte looptijd.
 
 ## 3. Aanleververzoek
 

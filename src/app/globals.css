@@ -100,6 +100,7 @@ a:active {
 
 .text-balance {
   text-wrap: balance;
+  overflow-wrap: anywhere;
 }
 
 @media (prefers-reduced-motion: reduce) {

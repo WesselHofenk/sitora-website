@@ -1,12 +1,32 @@
 "use client";
 
 import { AlertCircle, Check, LoaderCircle, Send } from "lucide-react";
-import { useSearchParams } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useSyncExternalStore } from "react";
 import { validateLead, type FieldErrors, type FormKind, type LeadPayload } from "@/lib/lead-validation";
 import Link from "next/link";
 
-const industries = ["Loodgieter", "Elektricien", "Schilder", "Dakdekker", "Aannemer / bouwbedrijf", "Installatiebedrijf", "Ander vakbedrijf"];
+const industries = ["Bouw en klus", "Automotive", "Beauty en gezondheid", "Horeca", "Wonen", "Creatieve sector", "Dieren", "Zakelijke dienstverlening", "Retail", "Onderwijs", "Andere branche"];
+const offerOptions = [
+  { value: "starter", label: "Starter" },
+  { value: "business", label: "Business" },
+  { value: "premium", label: "Premium" },
+  { value: "maatwerk", label: "Maatwerk" },
+  { value: "basis-onderhoud", label: "Basis onderhoud" },
+  { value: "groot-onderhoud", label: "Groot onderhoud" },
+  { value: "overig", label: "Overige vraag" },
+];
+
+function useRequestedOffer() {
+  return useSyncExternalStore(
+    () => () => undefined,
+    () => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const requested = searchParams.get("pakket") || searchParams.get("dienst") || "overig";
+      return offerOptions.some((option) => option.value === requested) ? requested : "overig";
+    },
+    () => "overig",
+  );
+}
 
 type AdviceApiResult = {
   ok?: boolean;
@@ -152,6 +172,7 @@ const textareaClass = `${inputClass} h-auto min-h-28 py-3`;
 
 export function CompactAdviceForm() {
   const { submit, loading, submitted, errors, formError, formSuccess } = useLeadForm("compact");
+  const offerDefault = useRequestedOffer();
   return (
     <form onSubmit={submit} noValidate className="rounded-[1.25rem] border border-white/10 bg-[#f6f3ed] p-6 text-slate-950 sm:p-9" aria-describedby={formError ? "compact-form-error" : undefined}>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -161,6 +182,7 @@ export function CompactAdviceForm() {
         <label className="grid gap-2 text-sm font-black text-slate-800">Telefoonnummer <span aria-hidden="true" className="text-orange-600">*</span><input className={inputClass} name="phone" type="tel" autoComplete="tel" required aria-invalid={!!errors.phone} /><FieldError message={errors.phone} /></label>
         <label className="grid gap-2 text-sm font-black text-slate-800">Branche <span aria-hidden="true" className="text-orange-600">*</span><select className={inputClass} name="industry" defaultValue="" required aria-invalid={!!errors.industry}><option value="" disabled>Kies je branche</option>{industries.map((industry) => <option key={industry}>{industry}</option>)}</select><FieldError message={errors.industry} /></label>
         <label className="grid gap-2 text-sm font-black text-slate-800">Huidige website <span aria-hidden="true" className="text-orange-600">*</span><select className={inputClass} name="currentWebsite" defaultValue="" required aria-invalid={!!errors.currentWebsite}><option value="" disabled>Kies een optie</option><option>Ik heb nog geen website</option><option>Ik heb al een website</option></select><FieldError message={errors.currentWebsite} /></label>
+        <label className="grid gap-2 text-sm font-black text-slate-800 sm:col-span-2">Waarmee kunnen we helpen? <span aria-hidden="true" className="text-orange-600">*</span><select key={offerDefault} className={inputClass} name="package" defaultValue={offerDefault} required aria-invalid={!!errors.package}>{offerOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select><FieldError message={errors.package} /></label>
       </div>
       <label className="mt-5 grid gap-2 text-sm font-black text-slate-800">Bericht <span aria-hidden="true" className="text-orange-600">*</span><textarea className={textareaClass} name="message" required aria-invalid={!!errors.message} placeholder="Vertel kort waar je hulp bij zoekt." /><FieldError message={errors.message} /></label>
       <label className="mt-5 flex items-start gap-3 text-sm leading-6 text-slate-700"><input className="mt-1 size-4 shrink-0 accent-orange-500" type="checkbox" name="privacy" required aria-invalid={!!errors.privacy} /><span>Ik geef Sitora toestemming om contact op te nemen over deze aanvraag. Lees de <Link href="/privacyverklaring" className="font-bold underline">privacyverklaring</Link>. *</span></label><FieldError message={errors.privacy} />
@@ -174,10 +196,9 @@ export function CompactAdviceForm() {
 }
 
 export function DetailedAdviceForm() {
-  const searchParams = useSearchParams();
   const { submit, loading, submitted, errors, formError, formSuccess } = useLeadForm("detailed");
-  const packageDefault = searchParams.get("pakket") || "unknown";
-  const features = ["Aparte dienstenpagina's", "Projectportfolio", "Meerdere werkgebieden", "Vacaturepagina", "Reviews-koppeling", "Analytics en conversiemeting"];
+  const packageDefault = useRequestedOffer();
+  const features = ["Aparte dienstenpagina's", "Portfolio of cases", "Meertaligheid", "Boekings- of offertemodule", "Reviews-koppeling", "Analytics en conversiemeting"];
   return (
     <form onSubmit={submit} noValidate className="rounded-[1.25rem] border border-slate-900/15 bg-white p-6 sm:p-9" aria-describedby={formError ? "detailed-form-error" : undefined}>
       <div className="grid gap-6 sm:grid-cols-2">
@@ -190,7 +211,7 @@ export function DetailedAdviceForm() {
         <label className="grid gap-2 text-sm font-black">Plaats of werkgebied *<input className={inputClass} name="city" autoComplete="address-level2" required aria-invalid={!!errors.city} /><FieldError message={errors.city} /></label>
         <label className="grid gap-2 text-sm font-black">Huidige website<input className={inputClass} name="currentWebsite" type="url" placeholder="https:// of leeg laten" /></label>
         <label className="grid gap-2 text-sm font-black">Project *<select className={inputClass} name="projectType" defaultValue="" required aria-invalid={!!errors.projectType}><option value="" disabled>Kies een project</option><option value="new">Nieuwe website</option><option value="redesign">Bestaande website vernieuwen</option></select><FieldError message={errors.projectType} /></label>
-        <label className="grid gap-2 text-sm font-black">Voorkeurspakket *<select className={inputClass} name="package" defaultValue={packageDefault} required aria-invalid={!!errors.package}><option value="unknown">Ik weet het nog niet</option><option value="start">Sitora Start</option><option value="professional">Sitora Professional</option><option value="groei">Sitora Maatwerk</option><option value="abonnement">Website-abonnement</option></select><FieldError message={errors.package} /></label>
+        <label className="grid gap-2 text-sm font-black">Waarmee kunnen we helpen? *<select key={packageDefault} className={inputClass} name="package" defaultValue={packageDefault} required aria-invalid={!!errors.package}>{offerOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select><FieldError message={errors.package} /></label>
       </div>
       <label className="mt-6 grid gap-2 text-sm font-black">Belangrijkste bedrijfsdoel *<textarea className={textareaClass} name="goal" required aria-invalid={!!errors.goal} placeholder="Bijvoorbeeld: meer aanvragen voor renovaties in regio Utrecht" /><FieldError message={errors.goal} /></label>
       <fieldset className="mt-6"><legend className="text-sm font-black">Gewenste functies</legend><div className="mt-3 grid gap-3 sm:grid-cols-2">{features.map((feature) => <label key={feature} className="flex min-h-11 items-center gap-3 rounded-xl border border-slate-200 p-3 text-sm font-bold"><input type="checkbox" name="features" value={feature} className="size-4 accent-orange-500" />{feature}</label>)}</div></fieldset>
