@@ -1,32 +1,12 @@
 "use client";
 
 import { AlertCircle, Check, LoaderCircle, Send } from "lucide-react";
-import { FormEvent, useState, useSyncExternalStore } from "react";
+import { FormEvent, useState } from "react";
 import { validateLead, type FieldErrors, type FormKind, type LeadPayload } from "@/lib/lead-validation";
+import { normalizeOffer, offerOptions } from "@/lib/offer-options";
 import Link from "next/link";
 
 const industries = ["Bouw en klus", "Automotive", "Beauty en gezondheid", "Horeca", "Wonen", "Creatieve sector", "Dieren", "Zakelijke dienstverlening", "Retail", "Onderwijs", "Andere branche"];
-const offerOptions = [
-  { value: "starter", label: "Starter" },
-  { value: "business", label: "Business" },
-  { value: "premium", label: "Premium" },
-  { value: "maatwerk", label: "Maatwerk" },
-  { value: "basis-onderhoud", label: "Basis onderhoud" },
-  { value: "groot-onderhoud", label: "Groot onderhoud" },
-  { value: "overig", label: "Overige vraag" },
-];
-
-function useRequestedOffer() {
-  return useSyncExternalStore(
-    () => () => undefined,
-    () => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const requested = searchParams.get("pakket") || searchParams.get("dienst") || "overig";
-      return offerOptions.some((option) => option.value === requested) ? requested : "overig";
-    },
-    () => "overig",
-  );
-}
 
 type AdviceApiResult = {
   ok?: boolean;
@@ -170,9 +150,9 @@ function useLeadForm(kind: FormKind) {
 const inputClass = "h-12 w-full rounded-lg border border-slate-900/20 bg-white px-4 text-base text-slate-950 outline-none transition-[border-color,box-shadow] duration-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10";
 const textareaClass = `${inputClass} h-auto min-h-28 py-3`;
 
-export function CompactAdviceForm() {
+export function CompactAdviceForm({ initialOffer = "overig" }: { initialOffer?: string }) {
   const { submit, loading, submitted, errors, formError, formSuccess } = useLeadForm("compact");
-  const offerDefault = useRequestedOffer();
+  const offerDefault = normalizeOffer(initialOffer);
   return (
     <form onSubmit={submit} noValidate className="rounded-[1.25rem] border border-white/10 bg-[#f6f3ed] p-6 text-slate-950 sm:p-9" aria-describedby={formError ? "compact-form-error" : undefined}>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -195,9 +175,9 @@ export function CompactAdviceForm() {
   );
 }
 
-export function DetailedAdviceForm() {
+export function DetailedAdviceForm({ initialOffer = "overig" }: { initialOffer?: string }) {
   const { submit, loading, submitted, errors, formError, formSuccess } = useLeadForm("detailed");
-  const packageDefault = useRequestedOffer();
+  const packageDefault = normalizeOffer(initialOffer);
   const features = ["Aparte dienstenpagina's", "Portfolio of cases", "Meertaligheid", "Boekings- of offertemodule", "Reviews-koppeling", "Analytics en conversiemeting"];
   return (
     <form onSubmit={submit} noValidate className="rounded-[1.25rem] border border-slate-900/15 bg-white p-6 sm:p-9" aria-describedby={formError ? "detailed-form-error" : undefined}>

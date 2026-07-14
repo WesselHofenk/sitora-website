@@ -7,8 +7,12 @@ import { BottomCta, FaqSection, MaintenanceSection, PackageComparison, PackagesS
 import { SectorPage } from "@/components/sector-page";
 import { ButtonLink, PageHero, SectionHeading } from "@/components/ui";
 import { allStaticSlugs, business, contact, faqs, sectors } from "@/content/site";
+import { normalizeOffer } from "@/lib/offer-options";
 
-type PageProps = { params: Promise<{ slug: string }> };
+type PageProps = {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
 
 const pageMeta: Record<string, { title: string; description: string }> = {
   diensten: { title: "Diensten", description: "Maatwerk webdesign, strategie, responsive ontwikkeling, SEO, conversie en ondersteuning voor ondernemers en organisaties." },
@@ -34,7 +38,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return { ...meta, alternates: { canonical: `/${slug}` }, openGraph: { title: `${meta.title} | Sitora`, description: meta.description, url: `/${slug}`, type: "website", locale: "nl_NL" }, twitter: { card: "summary_large_image", title: `${meta.title} | Sitora`, description: meta.description } };
 }
 
-export default async function ContentPage({ params }: PageProps) {
+export default async function ContentPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
   if (slug === "over-klusgroei") permanentRedirect("/over-sitora");
   const legacyBranches: Record<string, string> = { "websites-voor-loodgieters": "/websites-voor-bouw-en-klus", "websites-voor-elektriciens": "/websites-voor-bouw-en-klus", "websites-voor-schilders": "/websites-voor-bouw-en-klus", "websites-voor-dakdekkers": "/websites-voor-bouw-en-klus", "websites-voor-aannemers": "/websites-voor-bouw-en-klus" };
@@ -48,7 +52,11 @@ export default async function ContentPage({ params }: PageProps) {
   if (slug === "werkwijze") return <><PageHero eyebrow="Duidelijk van start tot live" title="Jouw bedrijf als vertrekpunt. Een website op maat als resultaat." description="Een compact proces, persoonlijk contact en transparante keuzes van kennismaking tot livegang."><ButtonLink href="/contact#advies">Ontvang gratis websiteadvies</ButtonLink></PageHero><ProcessSection full /><BottomCta /></>;
   if (slug === "voorbeelden") return <><PageHero eyebrow="Voorbeelden" title="Verschillende branches, ieder een eigen digitale uitstraling" description="Bekijk conceptuele richtingen die laten zien hoe strategie, design en conversie per bedrijf kunnen verschillen."><ButtonLink href="/contact#advies">Ontvang gratis websiteadvies</ButtonLink></PageHero><ProjectsSection showAll /><BottomCta /></>;
   if (slug === "veelgestelde-vragen") return <><PageHero eyebrow="Veelgestelde vragen" title="Heldere antwoorden, zonder kleine lettertjes" description="Alles wat je vooraf wilt weten over prijzen, pakketten, branches, onderhoud en uitbreidingen." /><FaqStructuredData /><FaqSection showAll /><BottomCta /></>;
-  if (slug === "contact") return <ContactPage />;
+  if (slug === "contact") {
+    const query = await searchParams;
+    const requested = typeof query.pakket === "string" ? query.pakket : typeof query.dienst === "string" ? query.dienst : undefined;
+    return <ContactPage initialOffer={normalizeOffer(requested)} />;
+  }
   if (slug === "over-sitora") return <AboutPage />;
   if (slug === "privacyverklaring") return <PrivacyPage />;
   if (slug === "cookieverklaring") return <CookiePage />;
@@ -57,8 +65,8 @@ export default async function ContentPage({ params }: PageProps) {
   notFound();
 }
 
-function ContactPage() {
-  return <><PageHero eyebrow="Gratis websiteadvies" title="Bespreek de website die past bij jouw volgende stap" description="Kies een pakket, onderhoudsbeurt of overige vraag. Via de pakketknoppen staat je keuze hieronder al voor je geselecteerd." /><section id="advies" className="py-20"><div className="mx-auto grid max-w-7xl gap-10 px-5 sm:px-8 lg:grid-cols-[.7fr_1.3fr]"><div><h2 className="text-3xl font-black tracking-[-.04em] text-slate-950">Neem direct contact op</h2><p className="mt-4 leading-7 text-slate-600">Liever eerst kort overleggen? Bel, WhatsApp of mail. De klantenservice is 24/7 bereikbaar; het moment van antwoord kan variëren.</p><div className="mt-8 space-y-4">{contact.phoneHref ? <a href={`tel:${contact.phoneHref}`} className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5"><span className="grid size-11 place-items-center rounded-xl bg-orange-50 text-orange-600"><Phone /></span><div><small className="text-slate-500">Bel ons</small><p className="font-black text-blue-950">{contact.phoneDisplay}</p></div></a> : null}<a href={`mailto:${contact.email}`} className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5"><span className="grid size-11 place-items-center rounded-xl bg-orange-50 text-orange-600"><Mail /></span><div><small className="text-slate-500">Mail ons</small><p className="font-black text-blue-950">{contact.email}</p></div></a><div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5"><span className="grid size-11 place-items-center rounded-xl bg-orange-50 text-orange-600"><MapPin /></span><div><small className="text-slate-500">Locatie</small><p className="font-black text-blue-950">{contact.location}</p></div></div></div></div><Suspense fallback={<div className="min-h-96 animate-pulse rounded-3xl bg-slate-200" aria-label="Formulier laden" />}><CompactAdviceForm /></Suspense></div></section></>;
+function ContactPage({ initialOffer }: { initialOffer: string }) {
+  return <><PageHero eyebrow="Gratis websiteadvies" title="Bespreek de website die past bij jouw volgende stap" description="Kies een pakket, onderhoudsbeurt of overige vraag. Via de pakketknoppen staat je keuze hieronder al voor je geselecteerd." /><section id="advies" className="py-20"><div className="mx-auto grid max-w-7xl gap-10 px-5 sm:px-8 lg:grid-cols-[.7fr_1.3fr]"><div><h2 className="text-3xl font-black tracking-[-.04em] text-slate-950">Neem direct contact op</h2><p className="mt-4 leading-7 text-slate-600">Liever eerst kort overleggen? Bel, WhatsApp of mail. De klantenservice is 24/7 bereikbaar; het moment van antwoord kan variëren.</p><div className="mt-8 space-y-4">{contact.phoneHref ? <a href={`tel:${contact.phoneHref}`} className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5"><span className="grid size-11 place-items-center rounded-xl bg-orange-50 text-orange-600"><Phone /></span><div><small className="text-slate-500">Bel ons</small><p className="font-black text-blue-950">{contact.phoneDisplay}</p></div></a> : null}<a href={`mailto:${contact.email}`} className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5"><span className="grid size-11 place-items-center rounded-xl bg-orange-50 text-orange-600"><Mail /></span><div><small className="text-slate-500">Mail ons</small><p className="font-black text-blue-950">{contact.email}</p></div></a><div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5"><span className="grid size-11 place-items-center rounded-xl bg-orange-50 text-orange-600"><MapPin /></span><div><small className="text-slate-500">Locatie</small><p className="font-black text-blue-950">{contact.location}</p></div></div></div></div><Suspense fallback={<div className="min-h-96 animate-pulse rounded-3xl bg-slate-200" aria-label="Formulier laden" />}><CompactAdviceForm initialOffer={initialOffer} /></Suspense></div></section></>;
 }
 
 function AboutPage() {
