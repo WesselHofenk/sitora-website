@@ -44,7 +44,7 @@ export function HomeHero() {
               <div className="relative m-5 min-h-72 overflow-hidden rounded-2xl bg-[#d9cfbf] sm:min-h-88 lg:m-8">
                 <div className="absolute -right-16 -top-16 size-72 rounded-full bg-orange-500/80 blur-2xl" />
                 <div className="absolute bottom-[-15%] left-[-10%] size-80 rounded-full bg-blue-950" />
-                <div className="absolute inset-10 grid place-items-center rounded-full bg-white/10"><span className="relative z-10 max-w-48 text-center text-2xl font-black text-white">Ontwerp met een eigen signatuur</span></div>
+                <div className="absolute inset-10 grid place-items-center rounded-full bg-white/10"><span className="relative z-10 max-w-56 rounded-full bg-[#07111f] px-6 py-5 text-center text-2xl font-black text-white shadow-xl">Ontwerp met een eigen signatuur</span></div>
               </div>
             </div>
             <div className="grid gap-3 bg-[#e9e2d7] p-5 sm:grid-cols-3 sm:p-6">
