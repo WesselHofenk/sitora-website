@@ -141,8 +141,7 @@ export async function POST(request: NextRequest) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: process.env.OPENAI_CHAT_MODEL || "gpt-5.6-luna",
-        reasoning: { effort: "none" },
+        model: process.env.OPENAI_CHAT_MODEL || "gpt-5-mini",
         instructions: buildChatbotInstructions(),
         input: messages,
         max_output_tokens: 350,

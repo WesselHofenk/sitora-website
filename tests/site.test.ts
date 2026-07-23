@@ -64,3 +64,15 @@ test("optional scripts remain behind their matching consent state", async () => 
   assert.equal(layoutSource.includes("googletagmanager.com/gtag"), false);
   assert.equal(layoutSource.includes("connect.facebook.net/en_US/fbevents"), false);
 });
+
+test("chat provider configuration stays server-side and stateless", async () => {
+  const routeSource = await readFile(new URL("../src/app/api/chat/route.ts", import.meta.url), "utf8");
+  const environmentExample = await readFile(new URL("../.env.example", import.meta.url), "utf8");
+
+  assert.ok(routeSource.includes('process.env.OPENAI_API_KEY'));
+  assert.ok(routeSource.includes('process.env.OPENAI_CHAT_MODEL || "gpt-5-mini"'));
+  assert.ok(routeSource.includes("store: false"));
+  assert.equal(routeSource.includes("NEXT_PUBLIC_OPENAI"), false);
+  assert.ok(environmentExample.includes("OPENAI_API_KEY="));
+  assert.ok(environmentExample.includes("OPENAI_CHAT_MODEL=gpt-5-mini"));
+});

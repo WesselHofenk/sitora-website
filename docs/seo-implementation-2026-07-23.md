@@ -64,8 +64,10 @@ Lighthouse is gemeten op de homepage in een mobiele en desktopconfiguratie.
 | Productiebaseline mobiel | 86 | 97 | 100 | 100 |
 | Productiebaseline desktop | 100 | 97 | 100 | 100 |
 | Lokale nameting mobiel na verbeteringen | 97 | 100 | 100 | 100 |
+| Productie-eindmeting mobiel | 89 | 100 | 100 | 100 |
+| Productie-eindmeting desktop | 99 | 100 | 100 | 100 |
 
-Bij de nameting waren alle contrastcontroles geslaagd, was de gemeten CLS `0`, de Total Blocking Time `26 ms` en gaf Lighthouse geen besparing meer aan voor de logolevering. Labmetingen variëren per run en zijn geen garantie voor Core Web Vitals in echte gebruikssituaties.
+Bij de productie-eindmeting waren alle contrastcontroles geslaagd. Mobiel waren de gemeten LCP `2248 ms`, CLS `0` en Total Blocking Time `406 ms`; desktop waren dat respectievelijk `728 ms`, circa `0,01` en `0 ms`. Lighthouse gaf geen besparing meer aan voor de logolevering. Labmetingen variëren per run en zijn geen garantie voor Core Web Vitals in echte gebruikssituaties.
 
 Daarnaast zijn linting, TypeScript-controle, de productiebuild en alle geautomatiseerde tests uitgevoerd. De sitemap bevat 24 indexeerbare URL's; de overige statische routes bestaan uit de homepage, systeemroutes en bewust niet-geïndexeerde routes.
 

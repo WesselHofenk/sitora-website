@@ -77,10 +77,10 @@ Maak voor lokaal gebruik een `.env.local` met:
 
 ```env
 OPENAI_API_KEY=
-OPENAI_CHAT_MODEL=gpt-5.6-luna
+OPENAI_CHAT_MODEL=gpt-5-mini
 ```
 
-Vul bij `OPENAI_API_KEY` een geldige server-side OpenAI API-sleutel in. Gebruik nooit een `NEXT_PUBLIC_`-naam voor deze variabele. De modelvariabele is optioneel; zonder waarde gebruikt de server `gpt-5.6-luna`.
+Vul bij `OPENAI_API_KEY` een geldige server-side OpenAI API-sleutel in. Gebruik nooit een `NEXT_PUBLIC_`-naam voor deze variabele. De modelvariabele is optioneel; zonder waarde gebruikt de server `gpt-5-mini`.
 
 De route begrenst berichtlengte en gesprekshistorie, past eenvoudige IP-rate-limiting toe, schakelt response-opslag uit (`store: false`) en stuurt alleen een gehashte veiligheidsidentificatie in plaats van een leesbaar IP-adres.
 
