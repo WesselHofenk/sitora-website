@@ -47,7 +47,7 @@ export function SiteHeader() {
           })}
         </nav>
         <div className="flex items-center gap-3">
-          <Link href="/contact#advies" className="hidden min-h-11 items-center gap-2 rounded-full bg-orange-500 px-5 text-sm font-extrabold text-white transition-[background-color,transform] duration-200 hover:bg-orange-600 active:scale-[.98] lg:inline-flex">
+          <Link href="/contact#advies" className="hidden min-h-11 items-center gap-2 rounded-full bg-orange-700 px-5 text-sm font-extrabold text-white transition-[background-color,transform] duration-200 hover:bg-orange-800 active:scale-[.98] lg:inline-flex">
             Gratis websiteadvies <ArrowUpRight className="size-4" aria-hidden="true" />
           </Link>
           <button ref={menuButton} type="button" aria-label={open ? "Menu sluiten" : "Menu openen"} aria-expanded={open} aria-controls="mobiel-menu" onClick={() => setOpen((value) => !value)} className="grid size-11 place-items-center rounded-full bg-white text-slate-950 transition-colors hover:bg-slate-100 xl:hidden">
@@ -66,7 +66,7 @@ export function SiteHeader() {
                 return <Link key={item.label} href={item.href} aria-current={active ? "page" : undefined} onClick={() => setOpen(false)} className="group flex min-h-16 items-center justify-between gap-4 py-3 text-2xl font-black tracking-[-.035em] text-white transition-colors hover:text-orange-300 aria-[current=page]:text-orange-400 sm:text-3xl"><span><small className="mr-4 align-middle text-[10px] font-black text-orange-400">0{index + 1}</small>{item.label}</span><ArrowUpRight className="size-5 text-slate-500 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1" /></Link>;
               })}
             </div>
-            <div className="mt-auto pt-10"><Link href="/contact#advies" onClick={() => setOpen(false)} className="inline-flex min-h-12 items-center gap-2 rounded-full bg-orange-500 px-6 text-sm font-black text-white">Gratis websiteadvies <ArrowUpRight className="size-4" /></Link><p className="mt-5 max-w-sm text-sm leading-6 text-slate-400">Heldere maatwerkwebsites voor mkb, dienstverleners, vakbedrijven en organisaties.</p></div>
+            <div className="mt-auto pt-10"><Link href="/contact#advies" onClick={() => setOpen(false)} className="inline-flex min-h-12 items-center gap-2 rounded-full bg-orange-700 px-6 text-sm font-black text-white">Gratis websiteadvies <ArrowUpRight className="size-4" /></Link><p className="mt-5 max-w-sm text-sm leading-6 text-slate-300">Heldere maatwerkwebsites voor mkb, dienstverleners, vakbedrijven en organisaties.</p></div>
           </nav>
         </div>
       ) : null}

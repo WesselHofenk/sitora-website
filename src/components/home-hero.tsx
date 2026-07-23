@@ -30,13 +30,13 @@ export function HomeHero() {
         <figure className="mt-12 hero-visual-reveal sm:mt-16">
           <div className="overflow-hidden rounded-[1.25rem] bg-[#f2eee6] text-slate-950 sm:rounded-[1.75rem]">
             <div className="flex items-center justify-between px-5 py-4 sm:px-7">
-              <div className="flex items-center gap-3"><span className="grid size-8 place-items-center rounded-lg bg-orange-500 text-xs font-black text-white">S</span><strong className="text-sm">Studio Meridian</strong></div>
+              <div className="flex items-center gap-3"><span className="grid size-8 place-items-center rounded-lg bg-orange-700 text-xs font-black text-white">S</span><strong className="text-sm">Studio Meridian</strong></div>
               <div className="hidden items-center gap-7 text-xs font-bold text-slate-600 sm:flex"><span>Expertise</span><span>Cases</span><span>Over ons</span></div>
-              <span className="text-xs font-black text-orange-600">Kennismaken ↗</span>
+              <span className="text-xs font-black text-orange-800">Kennismaken ↗</span>
             </div>
             <div className="grid lg:grid-cols-[1fr_1fr]">
               <div className="flex flex-col justify-center p-7 sm:p-12 lg:p-14">
-                <p className="text-xs font-black uppercase tracking-[.18em] text-orange-600">Strategie · ontwerp · groei</p>
+                <p className="text-xs font-black uppercase tracking-[.18em] text-orange-800">Strategie · ontwerp · groei</p>
                 <p className="mt-5 max-w-xl text-[clamp(2rem,6vw,3.75rem)] font-black leading-[1.02] tracking-[-.05em]">Een merkervaring die helder richting geeft.</p>
                 <p className="mt-5 max-w-md leading-7 text-slate-600">Een concept waarin positionering, bewijs en een duidelijke vervolgstap samenkomen.</p>
                 <span className="mt-7 inline-flex min-h-11 w-fit items-center rounded-full bg-[#07111f] px-5 text-sm font-black text-white">Ontdek onze aanpak</span>
@@ -49,7 +49,7 @@ export function HomeHero() {
             </div>
             <div className="grid gap-3 bg-[#e9e2d7] p-5 sm:grid-cols-3 sm:p-6">
               {["Eigen positionering", "Doordacht ontwerp", "Gerichte conversie"].map((item, index) => (
-                <div key={item} className="rounded-xl bg-[#f6f3ed] p-4"><small className="text-slate-500">0{index + 1}</small><p className="mt-2 font-black">{item}</p></div>
+                <div key={item} className="rounded-xl bg-[#f6f3ed] p-4"><small className="text-slate-700">0{index + 1}</small><p className="mt-2 font-black">{item}</p></div>
               ))}
             </div>
           </div>

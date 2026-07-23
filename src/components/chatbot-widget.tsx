@@ -159,7 +159,7 @@ export function ChatbotWidget() {
         aria-haspopup="dialog"
         className="fixed bottom-24 right-3 z-[60] inline-flex min-h-12 items-center gap-2 rounded-full border border-white/15 bg-[#07111f] px-4 font-black text-white shadow-2xl shadow-slate-950/25 transition-[background-color,transform] hover:bg-blue-900 md:bottom-6 md:right-6"
       >
-        <span className="relative grid size-8 place-items-center rounded-full bg-orange-500">
+        <span className="relative grid size-8 place-items-center rounded-full bg-orange-700">
           <MessageSquareText className="size-4" aria-hidden="true" />
           <span className="absolute right-0 top-0 size-2.5 rounded-full border-2 border-[#07111f] bg-emerald-400" aria-hidden="true" />
         </span>
@@ -176,7 +176,7 @@ export function ChatbotWidget() {
       className="fixed inset-x-3 bottom-24 z-[60] flex max-h-[calc(100dvh-7rem)] flex-col overflow-hidden rounded-[1.4rem] border border-slate-200 bg-white text-slate-950 shadow-2xl shadow-slate-950/30 md:bottom-6 md:left-auto md:right-6 md:w-[25rem] md:max-h-[min(42rem,calc(100dvh-3rem))]"
     >
       <header className="flex items-center gap-3 bg-[#07111f] px-4 py-4 text-white">
-        <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-orange-500">
+        <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-orange-700">
           <Sparkles className="size-5" aria-hidden="true" />
         </span>
         <div className="min-w-0 flex-1">
@@ -274,7 +274,7 @@ export function ChatbotWidget() {
             type="submit"
             disabled={loading || !input.trim()}
             aria-label="Bericht versturen"
-            className="grid size-12 shrink-0 place-items-center rounded-full bg-orange-500 text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"
+            className="grid size-12 shrink-0 place-items-center rounded-full bg-orange-700 text-white transition-colors hover:bg-orange-800 disabled:cursor-not-allowed disabled:bg-slate-300"
           >
             {loading ? <LoaderCircle className="size-5 animate-spin" aria-hidden="true" /> : <ArrowUp className="size-5" aria-hidden="true" />}
           </button>
@@ -285,7 +285,7 @@ export function ChatbotWidget() {
         >
           Contact opnemen of afspraak aanvragen
         </Link>
-        <p className="mt-2 text-center text-[10px] leading-4 text-slate-500">AI-assistent · deel geen gevoelige persoonsgegevens</p>
+        <p className="mt-2 text-center text-[10px] leading-4 text-slate-700">AI-assistent · deel geen gevoelige persoonsgegevens</p>
       </div>
     </section>
   );

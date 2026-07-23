@@ -5,11 +5,11 @@ import { PageHero } from "./ui";
 
 function Updated({ date }: { date: string }) {
   const formatted = new Intl.DateTimeFormat("nl-NL", { dateStyle: "long", timeZone: "Europe/Amsterdam" }).format(new Date(`${date}T12:00:00+02:00`));
-  return <p className="mb-8 text-sm text-slate-500">Laatst bijgewerkt: <time dateTime={date}>{formatted}</time></p>;
+  return <p className="mb-8 text-sm text-slate-700">Laatst bijgewerkt: <time dateTime={date}>{formatted}</time></p>;
 }
 
 function LegalBody({ date, icon, sections }: { date: string; icon?: React.ReactNode; sections: Array<[string, string]> }) {
-  return <section className="py-16 sm:py-20"><article className="mx-auto max-w-3xl px-5 sm:px-8"><Updated date={date} />{icon ? <div className="mb-3 text-orange-600" aria-hidden="true">{icon}</div> : null}{sections.map(([title, text]) => <section key={title} className="border-b border-slate-200 py-7"><h2 className="text-xl font-black text-slate-950">{title}</h2><p className="mt-3 leading-7 text-slate-600">{text}</p></section>)}</article></section>;
+  return <section className="py-16 sm:py-20"><article className="mx-auto max-w-3xl px-5 sm:px-8"><Updated date={date} />{icon ? <div className="mb-3 text-orange-800" aria-hidden="true">{icon}</div> : null}{sections.map(([title, text]) => <section key={title} className="border-b border-slate-200 py-7"><h2 className="text-xl font-black text-slate-950">{title}</h2><p className="mt-3 leading-7 text-slate-600">{text}</p></section>)}</article></section>;
 }
 
 export function PrivacyPage() {

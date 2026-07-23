@@ -14,7 +14,7 @@ export function ButtonLink({
   className?: string;
 }) {
   const styles = {
-    primary: "bg-orange-500 text-white hover:bg-orange-600",
+    primary: "bg-orange-700 text-white hover:bg-orange-800",
     secondary: "bg-white text-slate-900 shadow-sm hover:bg-slate-50",
     light: "bg-white text-blue-950 hover:bg-orange-50",
     dark: "bg-white/10 text-white hover:bg-white/15",
@@ -46,7 +46,7 @@ export function SectionHeading({
 }) {
   return (
     <div className={`max-w-3xl ${center ? "mx-auto text-center" : ""}`}>
-      <p className="mb-4 text-xs font-black uppercase tracking-[0.2em] text-orange-600">{eyebrow}</p>
+      <p className={`mb-4 text-xs font-black uppercase tracking-[0.2em] ${inverse ? "text-orange-300" : "text-orange-800"}`}>{eyebrow}</p>
       <h2 className={`text-balance text-[clamp(2.25rem,6vw,3.75rem)] font-black leading-[1.04] tracking-[-0.05em] ${inverse ? "text-white" : "text-slate-950"}`}>{title}</h2>
       {description ? <p className={`mt-5 max-w-2xl text-base leading-7 sm:text-lg sm:leading-8 ${inverse ? "text-blue-100" : "text-slate-600"}`}>{description}</p> : null}
     </div>

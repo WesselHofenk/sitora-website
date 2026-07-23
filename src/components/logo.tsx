@@ -10,6 +10,7 @@ export function Logo({ light = false }: { light?: boolean }) {
         width={202}
         height={66}
         priority={!light}
+        sizes="(max-width: 639px) 128px, 144px"
         className="h-auto w-32 sm:w-36"
       />
     </Link>
