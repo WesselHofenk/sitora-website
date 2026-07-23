@@ -5,6 +5,7 @@ export const offerOptions = [
   { value: "maatwerk", label: "Maatwerk" },
   { value: "basis-onderhoud", label: "Basis onderhoud" },
   { value: "groot-onderhoud", label: "Groot onderhoud" },
+  { value: "website-chatbot", label: "Websitechatbot — eenmalig € 149" },
   { value: "overig", label: "Overige vraag" },
 ] as const;
 

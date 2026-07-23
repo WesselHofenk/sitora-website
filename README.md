@@ -35,7 +35,7 @@ Alle herbruikbare inhoud staat in `src/content/site.ts`:
 - `projects`: vier expliciet fictieve conceptontwerpen;
 - `faqs`: algemene FAQ.
 
-De publieke bedrijfsgegevens staan centraal in `src/content/site.ts`. Vervang `portraitPath` door het pad naar een echte, geoptimaliseerde portretfoto zodra die beschikbaar is.
+De publieke bedrijfsgegevens staan centraal in `src/content/site.ts`.
 
 ## Formulieren
 
@@ -69,6 +69,21 @@ NEXT_PUBLIC_ANALYTICS_DEBUG=false
 
 De keuze wordt lokaal opgeslagen onder `sitora-consent` en is opnieuw te openen via **Cookievoorkeuren** in de footer. Bij intrekken worden bekende first-party trackingcookies verwijderd voor zover de browser dat toestaat.
 
+## Sitora 24/7-chatbot
+
+De chatbot staat op iedere pagina en stuurt berichten via de serverroute `/api/chat` naar de OpenAI Responses API. De API-sleutel blijft uitsluitend op de server. Gesprekken worden niet in de applicatie opgeslagen; de browser bewaart de zichtbare chatgeschiedenis alleen gedurende de huidige sessie.
+
+Maak voor lokaal gebruik een `.env.local` met:
+
+```env
+OPENAI_API_KEY=
+OPENAI_CHAT_MODEL=gpt-5.6-luna
+```
+
+Vul bij `OPENAI_API_KEY` een geldige server-side OpenAI API-sleutel in. Gebruik nooit een `NEXT_PUBLIC_`-naam voor deze variabele. De modelvariabele is optioneel; zonder waarde gebruikt de server `gpt-5.6-luna`.
+
+De route begrenst berichtlengte en gesprekshistorie, past eenvoudige IP-rate-limiting toe, schakelt response-opslag uit (`store: false`) en stuurt alleen een gehashte veiligheidsidentificatie in plaats van een leesbaar IP-adres.
+
 ## Routes
 
 - `/`
@@ -85,6 +100,8 @@ De keuze wordt lokaal opgeslagen onder `sitora-consent` en is opnieuw te openen 
 - `/websites-voor-retail`
 - `/websites-voor-onderwijs`
 - `/pakketten`
+- `/website-onderhoud`
+- `/chatbot-voor-je-website`
 - `/werkwijze`
 - `/voorbeelden`
 - `/over-sitora`
@@ -125,6 +142,8 @@ De route `/api/advies` is servercode en werkt niet wanneer alleen statische HTML
 - laat privacy-, cookie- en voorwaardenpagina's juridisch controleren;
 - configureer en test echte e-mailbezorging;
 - koppel het apexdomein en laat `www.sitora.nl` daarna naar de apexvariant verwijzen;
+- stel `OPENAI_API_KEY` als versleutelde productievariabele in en test Sitora 24/7 op mobiel en desktop;
+- voeg `https://sitora.nl/sitemap.xml` toe aan Google Search Console en vraag indexering van de belangrijkste pagina's aan;
 - controleer offerte en overeenkomst op scope, eigendom, betaling en losse onderhoudsbeurten;
 - voeg alleen echte reviews, certificeringen of klantcases toe;
 - test telefoon, WhatsApp, domein en formulieren op echte apparaten.

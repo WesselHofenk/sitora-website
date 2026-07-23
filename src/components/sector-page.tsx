@@ -19,10 +19,28 @@ function StructureSection({ sector }: { sector: Sector }) {
 }
 
 export function SectorPage({ sector }: { sector: Sector }) {
-  const breadcrumbData = { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
-    { "@type": "ListItem", position: 1, name: "Home", item: business.domain },
-    { "@type": "ListItem", position: 2, name: "Branches", item: `${business.domain}/branches` },
-    { "@type": "ListItem", position: 3, name: sector.plural, item: `${business.domain}/${sector.slug}` },
+  const structuredData = { "@context": "https://schema.org", "@graph": [
+    { "@type": "BreadcrumbList", itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: business.domain },
+      { "@type": "ListItem", position: 2, name: "Branches", item: `${business.domain}/branches` },
+      { "@type": "ListItem", position: 3, name: sector.plural, item: `${business.domain}/${sector.slug}` },
+    ] },
+    {
+      "@type": "Service",
+      name: `Website laten maken voor ${sector.plural.toLowerCase()}`,
+      description: sector.metaDescription,
+      provider: { "@id": `${business.domain}/#organization` },
+      areaServed: ["Nederland", "Nederlandstalig België"],
+      url: `${business.domain}/${sector.slug}`,
+    },
+    {
+      "@type": "FAQPage",
+      mainEntity: sector.faqs.map((faq) => ({
+        "@type": "Question",
+        name: faq.question,
+        acceptedAnswer: { "@type": "Answer", text: faq.answer },
+      })),
+    },
   ] };
   const orderedSections = sector.layout === "proof-first"
     ? [<ProofSection key="proof" sector={sector} />, <AudienceSection key="audience" sector={sector} />, <StructureSection key="structure" sector={sector} />]
@@ -31,8 +49,8 @@ export function SectorPage({ sector }: { sector: Sector }) {
       : [<AudienceSection key="audience" sector={sector} />, <ProofSection key="proof" sector={sector} />, <StructureSection key="structure" sector={sector} />];
 
   return <>
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbData).replace(/</g, "\u003c") }} />
-    <section className="overflow-hidden bg-[#07111f] py-16 text-white sm:py-20"><div className="mx-auto grid max-w-[86rem] items-center gap-10 px-5 sm:px-8 lg:grid-cols-[1fr_.8fr] lg:px-10"><div><nav aria-label="Broodkruimel" className="mb-6 flex flex-wrap items-center gap-2 text-xs font-bold text-blue-200"><Link href="/">Home</Link><ChevronRight className="size-3" aria-hidden="true" /><Link href="/branches">Branches</Link><ChevronRight className="size-3" aria-hidden="true" /><span aria-current="page">{sector.plural}</span></nav><p className="text-xs font-black uppercase tracking-[.2em] text-orange-400">{sector.eyebrow}</p><h1 className="mt-4 text-balance text-4xl font-black tracking-[-0.05em] sm:text-5xl lg:text-6xl">{sector.title}</h1><p className="mt-6 max-w-2xl text-lg leading-8 text-blue-100">{sector.description}</p><div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap"><ButtonLink href="/contact#advies">Bespreek jouw website</ButtonLink><ButtonLink href="/pakketten" variant="light">Bekijk pakketten en scope</ButtonLink></div></div><div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-slate-800"><Image src={sector.image} alt={sector.imageAlt} fill priority sizes="(max-width: 1023px) calc(100vw - 2.5rem), 42vw" className="object-cover" /></div></div></section>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
+    <section className="overflow-hidden bg-[#07111f] py-16 text-white sm:py-20"><div className="mx-auto grid max-w-[86rem] items-center gap-10 px-5 sm:px-8 lg:grid-cols-[1fr_.8fr] lg:px-10"><div><nav aria-label="Broodkruimel" className="mb-6 flex flex-wrap items-center gap-2 text-xs font-bold text-blue-200"><Link href="/">Home</Link><ChevronRight className="size-3" aria-hidden="true" /><Link href="/branches">Branches</Link><ChevronRight className="size-3" aria-hidden="true" /><span aria-current="page">{sector.plural}</span></nav><p className="text-xs font-black uppercase tracking-[.2em] text-orange-400">{sector.eyebrow}</p><h1 className="mt-4 text-balance text-4xl font-black tracking-[-0.05em] sm:text-5xl lg:text-6xl">Website laten maken voor {sector.plural.toLowerCase()}</h1><p className="mt-5 max-w-2xl text-2xl font-black leading-tight text-white">{sector.title}</p><p className="mt-5 max-w-2xl text-lg leading-8 text-blue-100">{sector.description}</p><div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap"><ButtonLink href="/contact#advies">Bespreek jouw website</ButtonLink><ButtonLink href="/pakketten" variant="light">Bekijk pakketten en scope</ButtonLink></div></div><div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-slate-800"><Image src={sector.image} alt={sector.imageAlt} fill priority sizes="(max-width: 1023px) calc(100vw - 2.5rem), 42vw" className="object-cover" /></div></div></section>
     <section className="bg-[#f6f3ed] py-10"><div className="mx-auto max-w-[86rem] px-5 sm:px-8 lg:px-10"><p className="text-xs font-black uppercase tracking-[.18em] text-orange-600">Waar de huidige klantreis vaak vastloopt</p><div className="mt-6 grid gap-3 md:grid-cols-3">{sector.problems.map((problem, index) => <div key={problem} className="flex gap-4 rounded-xl bg-white p-5 font-bold text-slate-800"><span className="text-xs text-orange-600">0{index + 1}</span>{problem}</div>)}</div></div></section>
     {orderedSections}
     <section className="bg-slate-100 py-16 sm:py-20"><div className="mx-auto max-w-7xl px-5 sm:px-8"><SectionHeading center eyebrow="Passende functies" title={`Concrete bouwstenen voor ${sector.plural.toLowerCase()}`} /><div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">{sector.features.map((feature, index) => <article key={feature.title} className="rounded-2xl bg-white p-7"><span className="text-3xl font-black text-orange-200">0{index + 1}</span><h2 className="mt-5 text-xl font-black text-slate-950">{feature.title}</h2><p className="mt-3 leading-7 text-slate-600">{feature.text}</p></article>)}</div></div></section>

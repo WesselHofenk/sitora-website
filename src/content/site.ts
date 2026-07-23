@@ -18,9 +18,9 @@ export const business = {
 };
 
 export const legalDocuments = {
-  privacy: { updatedAt: "2026-07-14" },
-  cookies: { updatedAt: "2026-07-14" },
-  terms: { updatedAt: "2026-07-14" },
+  privacy: { updatedAt: "2026-07-23" },
+  cookies: { updatedAt: "2026-07-23" },
+  terms: { updatedAt: "2026-07-23" },
 } as const;
 
 export const contact = {
@@ -457,6 +457,34 @@ export const maintenanceOptions = [
   { id: "groot-onderhoud", name: "Groot onderhoud", price: "€ 149", cadence: "per beurt, excl. btw", features: ["Alles uit Basis onderhoud", "Snelheidscontrole", "Formuliertests", "Kleine technische of visuele verbeteringen"] },
 ];
 
+export const chatbotOffer = {
+  id: "website-chatbot",
+  name: "Websitechatbot",
+  price: "€ 149",
+  cadence: "eenmalig, excl. btw · geen abonnement",
+  description: "Een chatbot die bezoekers helpt met vooraf afgestemde informatie en hen doorstuurt naar persoonlijk contact wanneer een antwoord ontbreekt.",
+  features: [
+    "Installatie op je website",
+    "Antwoorden afgestemd op jouw dienstverlening",
+    "Aansluiting op de uitstraling van je website",
+    "Duidelijke route naar persoonlijk contact",
+  ],
+};
+
+export const maintenanceFaqs = [
+  { question: "Is websiteonderhoud verplicht?", answer: "Nee. Sitora werkt zonder verplicht onderhoudsabonnement. Je vraagt een losse onderhoudsbeurt aan wanneer dat nodig is." },
+  { question: "Wat valt onder Basis onderhoud?", answer: "Basis onderhoud bevat een back-up, updates, een functionele controle en een kleine beveiligingscheck." },
+  { question: "Wat valt onder Groot onderhoud?", answer: "Groot onderhoud bevat alles uit Basis onderhoud, plus een snelheidscontrole, formuliertests en kleine technische of visuele verbeteringen." },
+  { question: "Zijn grotere wijzigingen inbegrepen?", answer: "Nee. Nieuwe pagina's, koppelingen en omvangrijke wijzigingen worden eerst beoordeeld en apart geprijsd." },
+];
+
+export const chatbotFaqs = [
+  { question: "Betaal ik maandelijks voor de chatbot?", answer: "Nee. De installatie kost eenmalig € 149 exclusief btw en heeft geen verplicht Sitora-abonnement. Eventuele externe licenties worden vooraf besproken." },
+  { question: "Wat doet de websitechatbot?", answer: "De chatbot beantwoordt vooraf afgestemde veelgestelde vragen en verwijst bezoekers naar persoonlijk contact wanneer informatie ontbreekt of onzeker is." },
+  { question: "Kan de chatbot later worden aangepast?", answer: "Ja. Aanpassingen buiten de afgesproken installatie worden eerst beoordeeld en vooraf geprijsd." },
+  { question: "Vervangt de chatbot persoonlijk contact?", answer: "Nee. De chatbot biedt laagdrempelige hulp en houdt een duidelijke route naar persoonlijk contact beschikbaar." },
+];
+
 export const processSteps = [
   { number: "01", title: "Aanvraag en kennismaking", text: "We bespreken je bedrijf, doelgroep, vraag en afhankelijkheden. Daarna bepalen we of en welk traject passend is." },
   { number: "02", title: "Intake en scope", text: "Pagina's, functies, inhoud, verantwoordelijkheden, feedbackrondes, externe kosten en planning worden vooraf vastgelegd." },
@@ -507,6 +535,7 @@ export const projects: ConceptProject[] = [
 ];
 
 export const faqs = [
+  { question: "Wat kost een chatbot voor mijn website?", answer: "De installatie van de Sitora-websitechatbot kost eenmalig € 149 exclusief btw, zonder verplicht abonnement. Eventuele externe licenties of extra werkzaamheden worden vooraf besproken." },
   { question: "Zijn de prijzen eenmalig?", answer: "Ja. Starter, Business en Premium zijn eenmalige websiteprojecten. Maatwerk begint vanaf € 3.495 en wordt na scopebepaling eenmalig geoffreerd. Eventuele extra's worden altijd vooraf besproken en geprijsd." },
   { question: "Is een onderhoudsabonnement verplicht?", answer: "Nee. Bij Sitora zit je niet vast aan een onderhoudsabonnement. Je betaalt alleen wanneer je onderhoud, ondersteuning of wijzigingen nodig hebt." },
   { question: "Kan ik later pagina's of functies toevoegen?", answer: "Ja. De website kan later worden uitgebreid met nieuwe pagina's, talen, formulieren, boekingen, koppelingen of andere functies. Je ontvangt vooraf een duidelijke prijsopgave." },
@@ -533,7 +562,7 @@ export const faqs = [
 
 export const allStaticSlugs = [
   ...sectors.map((sector) => sector.slug),
-  "branches", "diensten", "pakketten", "werkwijze", "voorbeelden", "over-sitora", "contact", "veelgestelde-vragen",
+  "branches", "diensten", "pakketten", "werkwijze", "voorbeelden", "over-sitora", "contact", "veelgestelde-vragen", "website-onderhoud", "chatbot-voor-je-website",
   "privacyverklaring", "cookieverklaring", "algemene-voorwaarden", "bedankt",
 ];
 

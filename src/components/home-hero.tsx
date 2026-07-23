@@ -6,9 +6,9 @@ export function HomeHero() {
     <section className="overflow-hidden bg-[#07111f] text-white">
       <div className="mx-auto max-w-[86rem] px-5 pb-16 pt-12 sm:px-8 sm:pb-20 sm:pt-20 lg:px-10 lg:pb-24">
         <div className="hero-reveal">
-          <p className="text-xs font-black uppercase tracking-[.22em] text-orange-400">Voor mkb, dienstverleners, vakbedrijven en organisaties</p>
+          <p className="text-xs font-black uppercase tracking-[.22em] text-orange-400">Sitora webdesign voor mkb, dienstverleners en organisaties</p>
           <h1 className="mt-6 max-w-6xl text-balance text-[clamp(2.5rem,8vw,5.5rem)] font-black leading-[.98] tracking-[-.06em]">
-            Een heldere website die <span className="text-orange-400">vertrouwen opbouwt en contact eenvoudiger maakt.</span>
+            Sitora maakt professionele websites die <span className="text-orange-400">vertrouwen opbouwen en contact eenvoudiger maken.</span>
           </h1>
         </div>
 
