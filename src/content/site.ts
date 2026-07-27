@@ -562,7 +562,7 @@ export const faqs = [
 
 export const allStaticSlugs = [
   ...sectors.map((sector) => sector.slug),
-  "branches", "diensten", "pakketten", "werkwijze", "voorbeelden", "over-sitora", "contact", "veelgestelde-vragen", "website-onderhoud", "chatbot-voor-je-website",
+  "branches", "diensten", "pakketten", "werkwijze", "voorbeelden", "over-sitora", "contact", "offerte", "veelgestelde-vragen", "website-onderhoud", "chatbot-voor-je-website",
   "privacyverklaring", "cookieverklaring", "algemene-voorwaarden", "bedankt",
 ];
 

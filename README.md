@@ -52,7 +52,9 @@ De browser laat de aanvraag eerst controleren door de same-origin route `/api/ad
 
 Er zijn geen API-keys of server-side environment variables nodig voor formulierbezorging. Na de eerste geldige inzending stuurt FormSubmit een eenmalige activatiemail naar `info@sitora.nl`. Klik op de bevestigingslink om bezorging te activeren. Controleer de actuele bewaartermijn en verwerkersvoorwaarden rechtstreeks bij FormSubmit voordat de juridische documenten worden goedgekeurd.
 
-De compacte aanvraag vereist naam, e-mailadres, branche, website-status, pakket of dienst, bericht en toestemming. Bedrijfsnaam en telefoonnummer zijn optioneel. URL-parameters `pakket` en `dienst` selecteren uitsluitend bekende waarden; ongeldige waarden vallen terug op `overig`. Het uitgebreide formulier stuurt daarnaast land, werkgebied, project, doel, functies en startperiode mee. `Reply-To` wordt ingesteld op het ingevulde e-mailadres.
+De algemene compacte aanvraag vereist naam, e-mailadres, branche, website-status, pakket of dienst, bericht en toestemming. Bedrijfsnaam en telefoonnummer zijn daar optioneel. Starter, Business en Premium openen via `/contact?pakket=...` een korte pakkettenintake waarin pakket, naam, bedrijfsnaam, e-mailadres, telefoonnummer en opmerkingen verplicht zijn. Maatwerk opent `/offerte?pakket=maatwerk` met een uitgebreid offerteformulier voor type website, aantal pagina's, gewenste functies, logo, huisstijl, opleverdatum, budget en extra wensen. Bekende URL-parameters worden veilig genormaliseerd en de gekozen route blijft zichtbaar in het formulier. `Reply-To` wordt ingesteld op het ingevulde e-mailadres.
+
+Alle formulieren gebruiken dezelfde same-origin validatie en FormSubmit-bezorging. De interne notificatie onderscheidt algemene contactaanvragen, vaste pakketaanvragen en maatwerkoffertes, en bevat bronpagina, tijdstip en aanwezige UTM-parameters. Naast honeypot en rate limiting worden een minimale invultijd, een eenmalige verzendcode en lokale dubbele-inzendingcontrole gebruikt.
 
 ## Cookiekeuze en analytics
 

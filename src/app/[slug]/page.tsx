@@ -3,13 +3,13 @@ import { CheckCircle2, Mail, MapPin, MessageCircle, Phone, Sparkles, Target } fr
 import { notFound, permanentRedirect } from "next/navigation";
 import { Suspense } from "react";
 import { BranchesPage } from "@/components/branches-page";
-import { CompactAdviceForm } from "@/components/lead-forms";
+import { CompactAdviceForm, CustomQuoteForm, PackageIntakeForm } from "@/components/lead-forms";
 import { CookiePage, PrivacyPage, TermsPage } from "@/components/legal-pages";
 import { BottomCta, FaqSection, MaintenanceSection, PackageComparison, PackagesSection, ProcessSection, ProjectsSection, ServicesSection } from "@/components/sections";
 import { SectorPage } from "@/components/sector-page";
 import { ButtonLink, PageHero, SectionHeading } from "@/components/ui";
 import { allStaticSlugs, business, chatbotFaqs, chatbotOffer, contact, faqs, maintenanceFaqs, sectors } from "@/content/site";
-import { normalizeOffer } from "@/lib/offer-options";
+import { fixedPackageValues, normalizeOffer } from "@/lib/offer-options";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -24,6 +24,7 @@ const pageMeta: Record<string, { title: string; description: string }> = {
   voorbeelden: { title: "Voorbeeldwebsites", description: "Bekijk eerlijk gelabelde conceptontwerpen voor verschillende branches en de doelen, structuur en functies erachter." },
   "over-sitora": { title: "Over Sitora en Wessel Hofenk", description: "Maak kennis met Sitora, de persoonlijke aanpak en Wessel Hofenk als vast aanspreekpunt voor je websiteproject." },
   contact: { title: "Contact en gratis websiteadvies", description: "Bespreek vrijblijvend je nieuwe website, pakket of onderhoudsvraag met Sitora en lees wat er na je aanvraag gebeurt." },
+  offerte: { title: "Maatwerkofferte aanvragen", description: "Vraag een maatwerkofferte aan voor een complexe website, webshop, koppeling, portaal of andere digitale oplossing." },
   "veelgestelde-vragen": { title: "Veelgestelde vragen", description: "Antwoorden over prijzen, scope, eigendom, hosting, onderhoud, privacy, toegankelijkheid, betaling en livegang." },
   "website-onderhoud": { title: "Websiteonderhoud zonder abonnement", description: "Kies los websiteonderhoud bij Sitora vanaf € 79 per beurt, zonder verplicht abonnement. Bekijk de inhoud, prijzen en grenzen." },
   "chatbot-voor-je-website": { title: "Chatbot voor je website voor € 149", description: "Laat Sitora een chatbot op je website installeren voor eenmalig € 149 excl. btw, zonder verplicht abonnement." },
@@ -75,8 +76,10 @@ export default async function ContentPage({ params, searchParams }: PageProps) {
   if (slug === "contact") {
     const query = await searchParams;
     const requested = typeof query.pakket === "string" ? query.pakket : typeof query.dienst === "string" ? query.dienst : undefined;
-    return <ContactPage initialOffer={normalizeOffer(requested)} />;
+    if (requested === "maatwerk") permanentRedirect("/offerte?pakket=maatwerk");
+    return <ContactPage initialOffer={normalizeOffer(requested)} fixedPackage={fixedPackageValues.has(requested || "")} />;
   }
+  if (slug === "offerte") return <OffertePage />;
   if (slug === "over-sitora") return <AboutPage />;
   if (slug === "website-onderhoud") return <WebsiteMaintenancePage />;
   if (slug === "chatbot-voor-je-website") return <ChatbotPage />;
@@ -95,13 +98,18 @@ function ServicesPage() {
   ].map((item) => <article key={item.title} className="rounded-2xl bg-white p-7"><h2 className="text-xl font-black">{item.title}</h2><p className="mt-3 leading-7 text-slate-600">{item.text}</p></article>)}</div><div className="mt-8 flex flex-wrap gap-3"><ButtonLink href="/website-onderhoud" variant="secondary">Websiteonderhoud</ButtonLink><ButtonLink href="/chatbot-voor-je-website" variant="secondary">Chatbot voor je website</ButtonLink></div></div></section><BottomCta /></>;
 }
 
-function ContactPage({ initialOffer }: { initialOffer: string }) {
+function ContactPage({ initialOffer, fixedPackage }: { initialOffer: string; fixedPackage: boolean }) {
   const contactCards = [
     contact.phoneHref ? { icon: Phone, label: "Bellen", value: contact.phoneDisplay, href: `tel:${contact.phoneHref}` } : null,
     contact.whatsapp ? { icon: MessageCircle, label: "WhatsApp", value: contact.phoneDisplay, href: `https://wa.me/${contact.whatsapp}` } : null,
     { icon: Mail, label: "E-mail", value: contact.email, href: `mailto:${contact.email}` },
   ].filter(Boolean) as Array<{ icon: typeof Phone; label: string; value: string; href: string }>;
+  if (fixedPackage) return <><PageHero eyebrow="Plan een kennismaking" title="Zet de eerste stap voor jouw gekozen websitepakket" description="Je gekozen pakket staat al ingevuld. Laat je contactgegevens en extra wensen achter voor een vrijblijvende kennismaking." /><section id="advies" className="py-16 sm:py-20"><div className="mx-auto grid max-w-7xl gap-10 px-5 sm:px-8 lg:grid-cols-[.72fr_1.28fr]"><div><h2 className="text-3xl font-black tracking-[-.04em] text-slate-950">Wat gebeurt er na je aanvraag?</h2><ol className="mt-6 space-y-4">{["De aanvraag wordt technisch gecontroleerd en naar de zakelijke mailbox gestuurd.", "Sitora bekijkt je gekozen pakket en extra wensen.", "Je krijgt op een werkdag zo snel mogelijk een reactie of een verzoek om ontbrekende informatie.", "Een kennismaking is vrijblijvend; scope en planning worden pas daarna definitief bevestigd."].map((item, index) => <li key={item} className="flex gap-4"><span className="grid size-8 shrink-0 place-items-center rounded-lg bg-blue-950 text-xs font-black text-orange-300">{index + 1}</span><p className="leading-7 text-slate-600">{item}</p></li>)}</ol><p className="mt-6 rounded-xl bg-orange-50 p-4 text-sm leading-6 text-orange-950">{business.responseExpectation}</p><div className="mt-6 space-y-3">{contactCards.map(({ icon: Icon, label, value, href }) => <a key={label} href={href} className="flex min-h-16 items-center gap-4 rounded-2xl bg-white p-4 shadow-sm"><span className="grid size-11 place-items-center rounded-xl bg-orange-50 text-orange-800"><Icon aria-hidden="true" /></span><span><small className="text-slate-700">{label}</small><strong className="block text-blue-950">{value}</strong></span></a>)}<div className="flex min-h-16 items-center gap-4 rounded-2xl bg-white p-4 shadow-sm"><span className="grid size-11 place-items-center rounded-xl bg-orange-50 text-orange-800"><MapPin aria-hidden="true" /></span><span><small className="text-slate-700">Werkgebied</small><strong className="block text-blue-950">{business.serviceArea}</strong></span></div></div></div><Suspense fallback={<div className="min-h-96 rounded-3xl bg-slate-200" aria-label="Formulier laden" />}><PackageIntakeForm initialPackage={initialOffer} /></Suspense></div></section></>;
   return <><PageHero eyebrow="Gratis websiteadvies" title="Vertel waar je website nu staat en wat de volgende stap moet worden" description="Kies een websitepakket, onderhoudsbeurt, chatbot of overige vraag. Een geldige keuze uit de URL staat al in het formulier geselecteerd." /><section id="advies" className="py-16 sm:py-20"><div className="mx-auto grid max-w-7xl gap-10 px-5 sm:px-8 lg:grid-cols-[.72fr_1.28fr]"><div><h2 className="text-3xl font-black tracking-[-.04em] text-slate-950">Wat gebeurt er na je aanvraag?</h2><ol className="mt-6 space-y-4">{["De aanvraag wordt technisch gecontroleerd en naar de zakelijke mailbox gestuurd.", "Sitora bekijkt je vraag, gewenste route en eventuele afhankelijkheden.", "Je krijgt op een werkdag zo snel mogelijk een reactie of een verzoek om ontbrekende informatie.", "Een kennismaking is vrijblijvend; scope en prijs worden pas daarna definitief bevestigd."].map((item, index) => <li key={item} className="flex gap-4"><span className="grid size-8 shrink-0 place-items-center rounded-lg bg-blue-950 text-xs font-black text-orange-300">{index + 1}</span><p className="leading-7 text-slate-600">{item}</p></li>)}</ol><p className="mt-6 rounded-xl bg-orange-50 p-4 text-sm leading-6 text-orange-950">{business.responseExpectation}</p><div className="mt-6 space-y-3">{contactCards.map(({ icon: Icon, label, value, href }) => <a key={label} href={href} className="flex min-h-16 items-center gap-4 rounded-2xl bg-white p-4 shadow-sm"><span className="grid size-11 place-items-center rounded-xl bg-orange-50 text-orange-800"><Icon aria-hidden="true" /></span><span><small className="text-slate-700">{label}</small><strong className="block text-blue-950">{value}</strong></span></a>)}<div className="flex min-h-16 items-center gap-4 rounded-2xl bg-white p-4 shadow-sm"><span className="grid size-11 place-items-center rounded-xl bg-orange-50 text-orange-800"><MapPin aria-hidden="true" /></span><span><small className="text-slate-700">Werkgebied</small><strong className="block text-blue-950">{business.serviceArea}</strong></span></div></div></div><Suspense fallback={<div className="min-h-96 rounded-3xl bg-slate-200" aria-label="Formulier laden" />}><CompactAdviceForm initialOffer={initialOffer} /></Suspense></div></section></>;
+}
+
+function OffertePage() {
+  return <><PageHero eyebrow="Maatwerkofferte" title="Breng je maatwerkvraag helder in kaart" description="Vertel welke website, functies, koppelingen en planning je nodig hebt. Sitora gebruikt je antwoorden om de scope en passende vervolgstap te beoordelen." /><section id="offerteformulier" className="py-16 sm:py-20"><div className="mx-auto grid max-w-7xl gap-10 px-5 sm:px-8 lg:grid-cols-[.65fr_1.35fr]"><div><h2 className="text-3xl font-black tracking-[-.04em] text-slate-950">Een gerichte aanvraag</h2><p className="mt-5 leading-7 text-slate-600">Maatwerk is bedoeld voor complexe websites, webshops, portalen, koppelingen en andere functies buiten de vaste pakketscope. Je antwoorden helpen om afhankelijkheden vroeg zichtbaar te maken.</p><ul className="mt-7 space-y-4">{["Alle antwoorden worden in één duidelijke maatwerknotificatie verstuurd.", "De aanvraag is vrijblijvend en vormt nog geen definitieve offerte.", "Sitora neemt op een werkdag zo snel mogelijk contact op over de vervolgstap."].map((item) => <li key={item} className="flex gap-3 leading-7 text-slate-700"><CheckCircle2 className="mt-1 size-5 shrink-0 text-emerald-700" aria-hidden="true" />{item}</li>)}</ul><p className="mt-7 rounded-xl bg-orange-50 p-4 text-sm leading-6 text-orange-950">{business.responseExpectation}</p></div><CustomQuoteForm /></div></section></>;
 }
 
 function WebsiteMaintenancePage() {

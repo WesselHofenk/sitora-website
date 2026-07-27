@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 import { allStaticSlugs, navigation, packages, sectors, sitemapSlugs } from "../src/content/site.ts";
-import { normalizeLead, validateLead } from "../src/lib/lead-validation.ts";
-import { normalizeOffer, offerOptions } from "../src/lib/offer-options.ts";
+import { formSubmitFields, notificationSubject, requestType } from "../src/lib/lead-notification.ts";
+import { normalizeLead, validateLead, validateSubmissionMeta } from "../src/lib/lead-validation.ts";
+import { normalizeFixedPackage, normalizeOffer, offerOptions, packageActionLabel, packageDestination } from "../src/lib/offer-options.ts";
+import { createSubmissionTokenGuard } from "../src/lib/submission-protection.ts";
 
 test("public routes, branch hub and sitemap stay consistent", () => {
   assert.equal(new Set(allStaticSlugs).size, allStaticSlugs.length);
@@ -32,6 +34,19 @@ test("package and maintenance query values normalize safely", () => {
   assert.equal(normalizeOffer("groot-onderhoud"), "groot-onderhoud");
   assert.equal(normalizeOffer("onbekend"), "overig");
   assert.equal(normalizeOffer(undefined), "overig");
+  assert.equal(normalizeFixedPackage("premium"), "premium");
+  assert.equal(normalizeFixedPackage("maatwerk"), "starter");
+});
+
+test("each website package has the intended next step", () => {
+  assert.equal(packageDestination("starter"), "/contact?pakket=starter#advies");
+  assert.equal(packageDestination("business"), "/contact?pakket=business#advies");
+  assert.equal(packageDestination("premium"), "/contact?pakket=premium#advies");
+  assert.equal(packageDestination("maatwerk"), "/offerte?pakket=maatwerk#offerteformulier");
+  for (const packageId of ["starter", "business", "premium"]) {
+    assert.equal(packageActionLabel(packageId), "Plan een kennismaking");
+  }
+  assert.equal(packageActionLabel("maatwerk"), "Vraag een maatwerkofferte aan");
 });
 
 test("compact lead validation accepts optional company and phone but rejects invalid offers", () => {
@@ -47,6 +62,121 @@ test("compact lead validation accepts optional company and phone but rejects inv
   });
   assert.deepEqual(validateLead(valid), {});
   assert.equal(validateLead({ ...valid, package: "onbekend" }).package?.includes("geldige"), true);
+});
+
+test("fixed package intake requires company and phone and keeps the selected package", () => {
+  const valid = normalizeLead({
+    kind: "package",
+    name: "Test Gebruiker",
+    company: "Testbedrijf",
+    email: "test@example.test",
+    phone: "+31 6 1234 5678",
+    package: "premium",
+    message: "We willen graag kennismaken over onze nieuwe website.",
+    privacy: true,
+  });
+  assert.deepEqual(validateLead(valid), {});
+  assert.equal(valid.package, "premium");
+  assert.ok(validateLead({ ...valid, company: "" }).company);
+  assert.ok(validateLead({ ...valid, phone: "123" }).phone);
+  assert.ok(validateLead({ ...valid, package: "maatwerk" }).package);
+  assert.ok(validateLead({ ...valid, email: "geen-email" }).email);
+});
+
+test("maatwerk quote validates every required project answer", () => {
+  const valid = normalizeLead({
+    kind: "custom",
+    name: "Test Gebruiker",
+    company: "Testbedrijf",
+    email: "test@example.test",
+    phone: "+31 6 1234 5678",
+    package: "maatwerk",
+    websiteType: "Platform, portaal of webapp",
+    pageCount: "25",
+    webshop: "Nee",
+    appointmentPlanner: "Ja",
+    aiChat: "Ja",
+    multilingual: "Nee",
+    hasLogo: "Ja",
+    hasBrandStyle: "Nee",
+    deliveryDate: "2026-12-15",
+    budget: "€ 7.500 – € 10.000",
+    message: "We hebben een portaal met een externe API-koppeling nodig.",
+    privacy: true,
+  });
+  assert.deepEqual(validateLead(valid), {});
+  assert.ok(validateLead({ ...valid, websiteType: "" }).websiteType);
+  assert.ok(validateLead({ ...valid, webshop: "" }).webshop);
+  assert.ok(validateLead({ ...valid, deliveryDate: "binnenkort" }).deliveryDate);
+  assert.ok(validateLead({ ...valid, budget: "" }).budget);
+});
+
+test("submission metadata blocks instant and malformed submissions", () => {
+  const now = Date.now();
+  const validMeta = normalizeLead({
+    kind: "package",
+    formStartedAt: new Date(now - 2_000).toISOString(),
+    submissionToken: "123e4567-e89b-12d3-a456-426614174000",
+  });
+  assert.equal(validateSubmissionMeta(validMeta, now), "");
+  assert.ok(validateSubmissionMeta({ ...validMeta, formStartedAt: new Date(now - 100).toISOString() }, now));
+  assert.ok(validateSubmissionMeta({ ...validMeta, submissionToken: "ongeldig" }, now));
+});
+
+test("duplicate submission tokens are rejected during the protection window", () => {
+  const guard = createSubmissionTokenGuard(60_000);
+  assert.equal(guard.isDuplicate("token-1", 1_000), false);
+  assert.equal(guard.isDuplicate("token-1", 2_000), true);
+  assert.equal(guard.isDuplicate("token-1", 62_000), false);
+});
+
+test("internal notifications distinguish package and custom requests and contain all answers", () => {
+  const fixed = normalizeLead({
+    kind: "package",
+    name: "Ada Voorbeeld",
+    company: "Voorbeeld BV",
+    email: "ada@example.test",
+    phone: "+31 6 1234 5678",
+    package: "premium",
+    message: "Graag een kennismaking.",
+    sourcePage: "/contact?pakket=premium&utm_source=google",
+    utmSource: "google",
+  });
+  assert.equal(notificationSubject(fixed), "Nieuwe aanvraag: Premium");
+  assert.equal(requestType(fixed), "Vaste pakketaanvraag");
+  const fixedFields = formSubmitFields(fixed, "aanvraag-1", new Date("2026-07-27T10:00:00Z"));
+  assert.equal(fixedFields.Pakket, "Premium");
+  assert.equal(fixedFields["Type aanvraag"], "Vaste pakketaanvraag");
+  assert.equal(fixedFields["UTM source"], "google");
+  assert.equal(fixedFields.Bedrijfsnaam, "Voorbeeld BV");
+
+  const custom = normalizeLead({
+    kind: "custom",
+    name: "Ada Voorbeeld",
+    company: "Voorbeeld BV",
+    email: "ada@example.test",
+    phone: "+31 6 1234 5678",
+    package: "maatwerk",
+    websiteType: "Webshop",
+    pageCount: "30",
+    webshop: "Ja",
+    appointmentPlanner: "Nee",
+    aiChat: "Ja",
+    multilingual: "Ja",
+    hasLogo: "Ja",
+    hasBrandStyle: "Ja",
+    deliveryDate: "2026-12-15",
+    budget: "Meer dan € 10.000",
+    message: "Koppeling met ons ERP is nodig.",
+  });
+  assert.equal(notificationSubject(custom), "Nieuwe maatwerkofferte aangevraagd");
+  assert.equal(requestType(custom), "Maatwerkofferte");
+  const customFields = formSubmitFields(custom, "aanvraag-2", new Date("2026-07-27T10:00:00Z"));
+  assert.equal(customFields["Type website"], "Webshop");
+  assert.equal(customFields["Gewenst aantal pagina’s"], "30");
+  assert.equal(customFields["AI-chat gewenst"], "Ja");
+  assert.equal(customFields.Budgetindicatie, "Meer dan € 10.000");
+  assert.equal(customFields["Extra wensen of opmerkingen"], "Koppeling met ons ERP is nodig.");
 });
 
 test("public legal components contain no draft or concept warning", async () => {

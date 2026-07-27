@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { normalizeLead, validateLead, type LeadPayload } from "@/lib/lead-validation";
+import { normalizeLead, validateLead, validateSubmissionMeta } from "@/lib/lead-validation";
+import { formSubmitFields } from "@/lib/lead-notification";
+import { createSubmissionTokenGuard } from "@/lib/submission-protection";
 
 export const dynamic = "force-dynamic";
 
 const FORM_SUBMIT_ENDPOINT = "https://formsubmit.co/ajax/info@sitora.nl";
 const attemptsByIp = new Map<string, number[]>();
+const submissionTokenGuard = createSubmissionTokenGuard();
 const RATE_LIMIT_WINDOW_MS = 10 * 60_000;
 const RATE_LIMIT_MAX_ATTEMPTS = 3;
 
@@ -19,69 +22,20 @@ function getClientIp(request: NextRequest) {
 
 function rateLimit(ip: string) {
   const now = Date.now();
-  const activeAttempts = (attemptsByIp.get(ip) || []).filter(
-    (attemptedAt) => now - attemptedAt < RATE_LIMIT_WINDOW_MS,
-  );
-
+  const activeAttempts = (attemptsByIp.get(ip) || []).filter((attemptedAt) => now - attemptedAt < RATE_LIMIT_WINDOW_MS);
   if (activeAttempts.length >= RATE_LIMIT_MAX_ATTEMPTS) {
-    const retryAfterSeconds = Math.max(
-      1,
-      Math.ceil((RATE_LIMIT_WINDOW_MS - (now - activeAttempts[0])) / 1_000),
-    );
+    const retryAfterSeconds = Math.max(1, Math.ceil((RATE_LIMIT_WINDOW_MS - (now - activeAttempts[0])) / 1_000));
     attemptsByIp.set(ip, activeAttempts);
     return retryAfterSeconds;
   }
-
   activeAttempts.push(now);
   attemptsByIp.set(ip, activeAttempts);
   return 0;
 }
 
-function formSourceUrl(sourcePage: string | undefined) {
-  const safePath = sourcePage?.startsWith("/") && !sourcePage.startsWith("//")
-    ? sourcePage
-    : "/contact";
-  return new URL(safePath, "https://sitora.nl").toString();
-}
-
-function formSubmitFields(payload: LeadPayload, submissionId: string) {
-  const submittedAt = new Intl.DateTimeFormat("nl-NL", {
-    dateStyle: "full",
-    timeStyle: "long",
-    timeZone: "Europe/Amsterdam",
-  }).format(new Date());
-
-  return {
-    _subject: `Nieuwe aanvraag voor gratis websiteadvies — ${payload.company || payload.name}`,
-    _template: "table",
-    _captcha: "false",
-    _replyto: payload.email || "",
-    _url: formSourceUrl(payload.sourcePage),
-    Naam: payload.name || "",
-    Bedrijfsnaam: payload.company || "",
-    "E-mailadres": payload.email || "",
-    Telefoonnummer: payload.phone || "",
-    Branche: payload.industry || "",
-    "Huidige website": payload.currentWebsite || "Niet ingevuld",
-    Bericht: payload.message || "",
-    Land: payload.country || "-",
-    "Plaats of werkgebied": payload.city || "-",
-    Project: payload.projectType || "-",
-    Pakket: payload.package || "-",
-    "Belangrijkste bedrijfsdoel": payload.goal || "-",
-    "Gewenste functies": payload.features?.join(", ") || "-",
-    Startperiode: payload.startPeriod || "-",
-    Formulier: payload.kind,
-    Bronpagina: payload.sourcePage || "/contact",
-    Ingediend: submittedAt,
-    Aanvraagnummer: submissionId,
-  };
-}
-
 export async function POST(request: NextRequest) {
   const submissionId = crypto.randomUUID();
   let requestBody: unknown;
-
   const declaredSize = Number(request.headers.get("content-length") || 0);
   if (declaredSize > 25_000) {
     return NextResponse.json({ ok: false, message: "De aanvraag is te groot." }, { status: 413 });
@@ -90,10 +44,7 @@ export async function POST(request: NextRequest) {
   try {
     requestBody = await request.json();
   } catch {
-    return NextResponse.json(
-      { ok: false, message: "De aanvraag bevat geen geldige gegevens." },
-      { status: 400 },
-    );
+    return NextResponse.json({ ok: false, message: "De aanvraag bevat geen geldige gegevens." }, { status: 400 });
   }
 
   try {
@@ -111,7 +62,19 @@ export async function POST(request: NextRequest) {
     if (Object.keys(errors).length) {
       return NextResponse.json(
         { ok: false, message: "Controleer de gemarkeerde velden.", errors },
-        { status: 400 },
+        { status: 400, headers: { "Cache-Control": "no-store" } },
+      );
+    }
+
+    const metaError = validateSubmissionMeta(payload);
+    if (metaError) {
+      return NextResponse.json({ ok: false, message: metaError }, { status: 400, headers: { "Cache-Control": "no-store" } });
+    }
+
+    if (submissionTokenGuard.isDuplicate(payload.submissionToken || "")) {
+      return NextResponse.json(
+        { ok: false, message: "Deze aanvraag is al verwerkt." },
+        { status: 409, headers: { "Cache-Control": "no-store" } },
       );
     }
 
@@ -119,14 +82,8 @@ export async function POST(request: NextRequest) {
     if (retryAfterSeconds) {
       console.warn("[contact-form] Rate limit reached", { submissionId });
       return NextResponse.json(
-        {
-          ok: false,
-          message: "Je hebt kort geleden meerdere aanvragen verstuurd. Probeer het later opnieuw.",
-        },
-        {
-          status: 429,
-          headers: { "Retry-After": String(retryAfterSeconds) },
-        },
+        { ok: false, message: "Je hebt kort geleden meerdere aanvragen verstuurd. Probeer het later opnieuw." },
+        { status: 429, headers: { "Retry-After": String(retryAfterSeconds), "Cache-Control": "no-store" } },
       );
     }
 
@@ -146,10 +103,7 @@ export async function POST(request: NextRequest) {
       errorName: error instanceof Error ? error.name : "UnknownError",
     });
     return NextResponse.json(
-      {
-        ok: false,
-        message: "Je aanvraag kon niet worden gecontroleerd. Probeer het opnieuw of mail info@sitora.nl.",
-      },
+      { ok: false, message: "Je aanvraag kon niet worden gecontroleerd. Probeer het opnieuw of mail info@sitora.nl." },
       { status: 500 },
     );
   }
