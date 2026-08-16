@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { buildChatbotInstructions } from "@/lib/chatbot-knowledge";
+import { buildLocalChatReply } from "@/lib/chatbot-conversation";
 
 export const dynamic = "force-dynamic";
 
@@ -124,12 +125,10 @@ export async function POST(request: NextRequest) {
   }
 
   if (!apiKey) {
+    const reply = buildLocalChatReply(messages);
     return NextResponse.json(
-      {
-        ok: false,
-        message: "Sitora 24/7 is nog niet geconfigureerd. Neem contact op via de contactpagina.",
-      },
-      { status: 503, headers: { "Cache-Control": "no-store" } },
+      { ok: true, ...reply },
+      { status: 200, headers: { "Cache-Control": "no-store" } },
     );
   }
 
@@ -181,8 +180,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const localReply = buildLocalChatReply(messages);
     return NextResponse.json(
-      { ok: true, answer },
+      { ok: true, answer, actions: localReply.actions },
       { status: 200, headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {

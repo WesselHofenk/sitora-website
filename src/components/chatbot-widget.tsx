@@ -9,23 +9,46 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState } from "react";
 
 type ChatMessage = {
   id: string;
   role: "user" | "assistant";
   content: string;
+  actions?: ChatAction[];
+};
+
+type ChatAction = {
+  label: string;
+  href?: string;
+  message?: string;
 };
 
 type ChatApiResult = {
   ok?: boolean;
   answer?: string;
+  actions?: ChatAction[];
   message?: string;
 };
 
 const STORAGE_KEY = "sitora-24-7-session";
 const WELCOME_MESSAGE = "Hoi! Ik ben Sitora 24/7. Waarmee kan ik je vandaag helpen?";
 const quickChoices = ["Diensten", "Prijzen", "Afspraak maken", "Contact"];
+
+function safeActions(input: unknown): ChatAction[] | undefined {
+  if (!Array.isArray(input)) return undefined;
+  const actions = input.filter((action): action is ChatAction => {
+    if (!action || typeof action !== "object") return false;
+    const value = action as Record<string, unknown>;
+    if (typeof value.label !== "string" || value.label.length > 50) return false;
+    const safeHref = typeof value.href === "string" && (
+      /^\/(?!\/)/.test(value.href) || /^https:\/\/wa\.me\/\d+$/.test(value.href)
+    );
+    const safeMessage = typeof value.message === "string" && value.message.length <= 200;
+    return safeHref || safeMessage;
+  }).slice(0, 3);
+  return actions.length ? actions : undefined;
+}
 
 function initialMessages(): ChatMessage[] {
   return [{ id: "welkom", role: "assistant", content: WELCOME_MESSAGE }];
@@ -44,7 +67,10 @@ function storedMessages() {
       (item.role === "user" || item.role === "assistant") &&
       typeof item.content === "string" &&
       item.content.length <= 1_000
-    )).slice(-30);
+    )).map((item) => ({
+      ...item,
+      actions: safeActions(item.actions),
+    })).slice(-30);
     return messages.length ? messages : initialMessages();
   } catch {
     return initialMessages();
@@ -135,6 +161,7 @@ export function ChatbotWidget() {
         id: crypto.randomUUID(),
         role: "assistant",
         content: result.answer!,
+        actions: safeActions(result.actions),
       };
       setMessages((current) => [...current, assistantMessage].slice(-30));
     } catch {
@@ -145,6 +172,12 @@ export function ChatbotWidget() {
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void sendMessage(input);
+  }
+
+  function sendOnEnter(event: ReactKeyboardEvent<HTMLInputElement>) {
+    if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
     event.preventDefault();
     void sendMessage(input);
   }
@@ -214,7 +247,7 @@ export function ChatbotWidget() {
         className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-[#f6f3ed] px-4 py-5"
       >
         {messages.map((message) => (
-          <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+          <div key={message.id} className={`flex flex-col ${message.role === "user" ? "items-end" : "items-start"}`}>
             <p className={`max-w-[86%] whitespace-pre-wrap break-words rounded-2xl px-4 py-3 text-sm leading-6 ${
               message.role === "user"
                 ? "rounded-br-md bg-[#07111f] text-white"
@@ -222,6 +255,29 @@ export function ChatbotWidget() {
             }`}>
               {message.content}
             </p>
+            {message.role === "assistant" && message.actions?.length ? (
+              <div className="mt-2 flex max-w-full flex-wrap gap-2" aria-label="Vervolgacties">
+                {message.actions.map((action) => action.href ? (
+                  <Link
+                    key={`${message.id}-${action.label}`}
+                    href={action.href}
+                    className="inline-flex min-h-9 items-center rounded-full border border-orange-300 bg-white px-3 text-xs font-black text-orange-900 transition-colors hover:border-orange-500 hover:bg-orange-50"
+                  >
+                    {action.label}
+                  </Link>
+                ) : (
+                  <button
+                    key={`${message.id}-${action.label}`}
+                    type="button"
+                    disabled={loading}
+                    onClick={() => void sendMessage(action.message || action.label)}
+                    className="min-h-9 rounded-full border border-orange-300 bg-white px-3 text-xs font-black text-orange-900 transition-colors hover:border-orange-500 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
         ))}
 
@@ -244,7 +300,7 @@ export function ChatbotWidget() {
       </div>
 
       <div className="border-t border-slate-200 bg-white p-3">
-        <div className="mb-3 flex gap-2 overflow-x-auto pb-1" aria-label="Snelle keuzes">
+        <div className="mb-3 flex flex-wrap gap-2 pb-1" aria-label="Snelle keuzes">
           {quickChoices.map((choice) => (
             <button
               key={choice}
@@ -264,6 +320,7 @@ export function ChatbotWidget() {
             id="sitora-chat-input"
             value={input}
             onChange={(event) => setInput(event.target.value)}
+            onKeyDown={sendOnEnter}
             maxLength={600}
             autoComplete="off"
             placeholder="Typ je vraag…"

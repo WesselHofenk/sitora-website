@@ -6,6 +6,7 @@ import { formSubmitFields, notificationSubject, requestType } from "../src/lib/l
 import { normalizeLead, validateLead, validateSubmissionMeta } from "../src/lib/lead-validation.ts";
 import { normalizeFixedPackage, normalizeOffer, offerOptions, packageActionLabel, packageDestination } from "../src/lib/offer-options.ts";
 import { createSubmissionTokenGuard } from "../src/lib/submission-protection.ts";
+import { buildLocalChatReply } from "../src/lib/chatbot-conversation.ts";
 
 test("public routes, branch hub and sitemap stay consistent", () => {
   assert.equal(new Set(allStaticSlugs).size, allStaticSlugs.length);
@@ -205,4 +206,55 @@ test("chat provider configuration stays server-side and stateless", async () => 
   assert.equal(routeSource.includes("NEXT_PUBLIC_OPENAI"), false);
   assert.ok(environmentExample.includes("OPENAI_API_KEY="));
   assert.ok(environmentExample.includes("OPENAI_CHAT_MODEL=gpt-5-mini"));
+});
+
+test("chat knowledge answers Dutch wording variations without provider configuration", () => {
+  for (const question of ["Wat kost een website?", "Hoeveel kosten websites?", "Welke prijzen hebben jullie?"]) {
+    const reply = buildLocalChatReply([{ role: "user", content: question }]);
+    assert.match(reply.answer, /€ 695/);
+    assert.match(reply.answer, /excl\. btw/);
+    assert.ok(reply.actions.some((action) => action.href === "/pakketten"));
+  }
+});
+
+test("chat keeps pricing context for a simple company website", () => {
+  const first = buildLocalChatReply([{ role: "user", content: "Hoeveel kosten websites?" }]);
+  const followUp = buildLocalChatReply([
+    { role: "user", content: "Hoeveel kosten websites?" },
+    { role: "assistant", content: first.answer },
+    { role: "user", content: "Ik wil gewoon een simpele website voor mijn bedrijf" },
+  ]);
+  assert.match(followUp.answer, /Starter/);
+  assert.match(followUp.answer, /5–7 werkdagen/);
+  assert.match(followUp.answer, /al een website|vanaf nul/);
+
+  const statusFollowUp = buildLocalChatReply([
+    { role: "user", content: "Hoeveel kosten websites?" },
+    { role: "assistant", content: first.answer },
+    { role: "user", content: "Ik wil gewoon een simpele website voor mijn bedrijf" },
+    { role: "assistant", content: followUp.answer },
+    { role: "user", content: "Ik heb nog geen website, dus ik start vanaf nul" },
+  ]);
+  assert.match(statusFollowUp.answer, /vanaf de basis/);
+  assert.match(statusFollowUp.answer, /branche/);
+});
+
+test("all primary chat intents return useful verified actions", () => {
+  const expectations = [
+    ["Welke diensten bieden jullie aan?", "/diensten"],
+    ["Maken jullie webshops?", "/offerte?pakket=maatwerk#offerteformulier"],
+    ["Hoe lang duurt een website?", "/pakketten"],
+    ["Kunnen jullie mijn bestaande website verbeteren?", "/website-onderhoud"],
+    ["Werken jullie met kleine bedrijven?", "/branches"],
+    ["Hoe kan ik contact opnemen?", "/contact#advies"],
+    ["Kan ik een afspraak maken?", "/contact#advies"],
+    ["Wat doet Sitora precies?", "/diensten"],
+    ["Waarom zou ik voor Sitora kiezen?", "/werkwijze"],
+  ] as const;
+
+  for (const [question, href] of expectations) {
+    const reply = buildLocalChatReply([{ role: "user", content: question }]);
+    assert.ok(reply.answer.length > 40, question);
+    assert.ok(reply.actions.some((action) => action.href === href), question);
+  }
 });

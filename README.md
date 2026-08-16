@@ -73,7 +73,7 @@ De keuze wordt lokaal opgeslagen onder `sitora-consent` en is opnieuw te openen 
 
 ## Sitora 24/7-chatbot
 
-De chatbot staat op iedere pagina en stuurt berichten via de serverroute `/api/chat` naar de OpenAI Responses API. De API-sleutel blijft uitsluitend op de server. Gesprekken worden niet in de applicatie opgeslagen; de browser bewaart de zichtbare chatgeschiedenis alleen gedurende de huidige sessie.
+De chatbot staat op iedere pagina en gebruikt altijd een server-side Sitora-kennislaag voor veelgestelde vragen, prijzen, diensten, contact en contextuele vervolgstappen. Wanneer een OpenAI-sleutel is ingesteld, stuurt de serverroute `/api/chat` het gesprek aanvullend naar de OpenAI Responses API voor vrijere taalvariaties. De API-sleutel blijft uitsluitend op de server. Zonder sleutel blijft de chatbot volledig bruikbaar via de lokale Sitora-kennislaag. Gesprekken worden niet in de applicatie opgeslagen; de browser bewaart de zichtbare chatgeschiedenis alleen gedurende de huidige sessie.
 
 Maak voor lokaal gebruik een `.env.local` met:
 
